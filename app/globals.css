@@ -382,8 +382,12 @@ body{color:#283a4d}
 /* Distribute navigation labels across the full chapter-column width. */
 .site-header>nav.highlight-nav{padding-inline:0;justify-content:space-between}
 
+/* Header and home footer share fluid edges, including on ultrawide screens. */
+:root{--page-edge:5vw}
+@media(max-width:760px){:root{--page-edge:24px}}
+.home-entry{padding-inline:var(--page-edge)}
 /* Brand on the left, site destinations and search on the right. */
-.site-header{padding-inline:clamp(12px,2.2vw,32px)}
+.site-header{width:calc(100% - 2 * var(--page-edge));max-width:none;margin-inline:auto;padding-inline:0}
 .site-header .wordmark{order:0;font-size:14px;font-weight:600}
 .site-header .wordmark span{display:inline}
 .site-header>nav.highlight-nav{width:auto;flex:0 0 auto;margin-left:auto;padding:0;gap:clamp(16px,2vw,28px)}
