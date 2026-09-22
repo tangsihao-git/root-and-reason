@@ -1,0 +1,545 @@
+:root {
+  --color-fd-primary: #087966;
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-background: #fcfdfc;
+  --color-fd-foreground: #1f2926;
+  --color-fd-card: #f7faf8;
+  --color-fd-card-foreground: #1f2926;
+  --color-fd-muted: #eef3f1;
+  --color-fd-muted-foreground: #66736e;
+  --color-fd-secondary: #edf2f0;
+  --color-fd-secondary-foreground: #34433e;
+  --color-fd-border: #dde5e1;
+  --color-fd-accent: #e8f1ed;
+  --color-fd-accent-foreground: #24594f;
+  --color-fd-ring: #087966;
+  --research-ink: #1f2926;
+  --research-green: #087966;
+  --research-green-deep: #075f52;
+  --research-blue-grey: #587078;
+  --research-paper: #fcfdfc;
+  --research-panel: #f4f8f6;
+  --research-rule: #dde5e1;
+  --fd-banner-height: 64px;
+}
+
+html {
+  scrollbar-gutter: stable;
+  scroll-padding-top: 84px;
+}
+
+body {
+  color: var(--research-ink);
+  background: var(--research-paper);
+  text-rendering: optimizeLegibility;
+  font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', '微软雅黑', sans-serif;
+}
+
+::selection {
+  color: #16312a;
+  background: #cce5dc;
+}
+
+:focus-visible {
+  outline-color: var(--research-green);
+  outline-width: 2px;
+  outline-offset: 3px;
+}
+
+/* Top navigation: quiet enough to leave the content in charge. */
+.site-header {
+  height: 64px;
+  background: rgb(252 253 252 / 96%);
+  border-bottom-color: var(--research-rule);
+  backdrop-filter: blur(12px);
+}
+
+.header-inner {
+  max-width: 1500px;
+  padding-inline: clamp(22px, 3vw, 46px);
+  gap: clamp(34px, 4vw, 62px);
+}
+
+.wordmark {
+  gap: 11px;
+  color: var(--research-ink);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.15px;
+}
+
+.brand-pixel {
+  color: var(--research-green);
+}
+
+.site-header nav {
+  gap: clamp(24px, 2.8vw, 40px);
+}
+
+.site-header nav a {
+  color: #64716c;
+  font-size: 14px;
+  font-weight: 400;
+  transition: color 140ms ease;
+}
+
+.site-header nav a:hover,
+.site-header nav a[data-active='true'] {
+  color: var(--research-ink);
+}
+
+.site-header nav a[data-active='true']::after {
+  height: 2px;
+  background: var(--research-green);
+}
+
+/* Documentation shell: a technical manual with a calm paper surface. */
+#nd-docs-layout {
+  background: var(--research-paper);
+}
+
+#nd-sidebar {
+  border-inline-end-color: var(--research-rule);
+  background: #f7faf8;
+  font-size: 13px;
+}
+
+#nd-sidebar a,
+#nd-sidebar button {
+  border-radius: 3px;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+#nd-sidebar a:hover,
+#nd-sidebar button:hover {
+  color: #244c43;
+  background: #edf3f0;
+}
+
+#nd-sidebar a[data-active='true'] {
+  color: var(--research-green-deep);
+  background: #e6f0ec;
+  font-weight: 600;
+}
+
+#nd-sidebar a[data-active='true']::after {
+  position: absolute;
+  inset-inline-start: 7px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  content: '';
+  background: var(--research-green);
+  box-shadow: 0 0 0 2px #e6f0ec;
+  transform: translateY(-50%);
+}
+
+#nd-sidebar [class*='before:bg-fd-border']::before {
+  background: #d8e2de;
+}
+
+#nd-subnav,
+#nd-docs-layout > [class*='toc-popover'] {
+  border-color: var(--research-rule);
+  background: rgb(252 253 252 / 92%);
+}
+
+#nd-page {
+  max-width: 860px;
+  padding-top: 46px;
+  padding-bottom: 64px;
+  gap: 0;
+}
+
+#nd-page > h1 {
+  max-width: 780px;
+  margin: 0;
+  color: var(--research-ink);
+  font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', '微软雅黑', sans-serif;
+  font-size: clamp(30px, 3vw, 38px);
+  font-weight: 650;
+  line-height: 1.26;
+  letter-spacing: -0.8px;
+}
+
+#nd-page > h1 + p {
+  max-width: 740px;
+  margin: 14px 0 30px;
+  color: #6b7772;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.prose {
+  width: 100%;
+  color: #29332f;
+  font-family: 'Times New Roman', 'Microsoft YaHei', '微软雅黑', sans-serif;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.prose p,
+.prose li {
+  line-height: 1.35;
+}
+
+.prose p {
+  margin-block: 0.82em;
+}
+
+.prose ul,
+.prose ol {
+  padding-inline-start: 1.45em;
+  margin-block: 0.8em 1.05em;
+}
+
+.prose li {
+  margin-block: 0.3em;
+  padding-inline-start: 0.18em;
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: var(--research-ink);
+  font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', '微软雅黑', sans-serif;
+  letter-spacing: -0.25px;
+}
+
+.prose h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 1.85em;
+  margin-bottom: 0.7em;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--research-rule);
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.32;
+}
+
+.prose h2::before {
+  width: 14px;
+  height: 8px;
+  flex: 0 0 auto;
+  content: '';
+  background: var(--research-green);
+  clip-path: polygon(0 62%, 28% 62%, 28% 12%, 57% 12%, 57% 62%, 100% 62%, 100% 88%, 43% 88%, 43% 38%, 41% 38%, 41% 88%, 0 88%);
+}
+
+.prose h3 {
+  margin-top: 1.55em;
+  margin-bottom: 0.55em;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.prose h4 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.prose strong {
+  color: #1e2d28;
+  font-weight: 650;
+}
+
+.prose a {
+  color: var(--research-green-deep);
+  text-decoration-color: #8cb6a9;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.prose a:hover {
+  color: #064b42;
+  text-decoration-color: currentColor;
+}
+
+.prose blockquote {
+  margin-block: 1.25em;
+  padding: 13px 17px;
+  border: 0;
+  border-inline-start: 3px solid var(--research-green);
+  border-radius: 0 3px 3px 0;
+  color: #34453f;
+  background: #f0f5f3;
+  font-style: normal;
+}
+
+.prose blockquote p {
+  margin: 0;
+}
+
+.prose .katex {
+  color: #172620;
+  font-size: 1.04em;
+}
+
+.prose .katex-display {
+  margin: 1.08em 0;
+  padding: 13px 18px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #e1e8e5;
+  border-radius: 3px;
+  background: var(--research-panel);
+}
+
+.prose :not(pre) > code {
+  padding: 0.12em 0.34em;
+  border: 1px solid #dce6e2;
+  border-radius: 3px;
+  color: #1b5b4e;
+  background: #eef5f2;
+  font-size: 0.88em;
+}
+
+.prose table {
+  width: 100%;
+  margin-block: 1.25em;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--research-rule);
+  border-radius: 3px;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.prose th {
+  color: #27443b;
+  background: #eaf2ef;
+  font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', '微软雅黑', sans-serif;
+  font-weight: 600;
+  text-align: start;
+}
+
+.prose th,
+.prose td {
+  padding: 10px 12px;
+  border-inline-end: 1px solid var(--research-rule);
+  border-bottom: 1px solid var(--research-rule);
+  vertical-align: top;
+}
+
+.prose tr:last-child td {
+  border-bottom: 0;
+}
+
+.prose th:last-child,
+.prose td:last-child {
+  border-inline-end: 0;
+}
+
+.prose tbody tr:nth-child(even) {
+  background: #fafcfb;
+}
+
+.prose hr {
+  margin-block: 2.2em 1.25em;
+  border-color: var(--research-rule);
+}
+
+#nd-page a[class*='rounded-lg'][class*='border'] {
+  border-radius: 3px;
+  border-color: var(--research-rule);
+  background: #fafcfb;
+}
+
+#nd-page a[class*='rounded-lg'][class*='border']:hover {
+  color: var(--research-green-deep);
+  background: #eef4f1;
+}
+
+#nd-toc {
+  width: 238px;
+  padding-top: 48px;
+  padding-inline-end: 18px;
+  color: #6a7772;
+}
+
+#nd-toc a {
+  padding-block: 5px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+#nd-toc a[data-active='true'] {
+  color: var(--research-green-deep);
+  font-weight: 500;
+}
+
+/* Homepage refinements: pixel illustrations remain the singular visual accent. */
+.home.journey-home {
+  max-width: 1320px;
+  padding-inline: clamp(24px, 3vw, 42px);
+}
+
+.journey-intro {
+  padding-block: 27px 21px;
+}
+
+.journey-intro .eyebrow {
+  margin-bottom: 10px;
+  color: var(--research-green);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.journey-intro h1 {
+  color: var(--research-ink);
+  font-size: clamp(32px, 3.1vw, 43px);
+  letter-spacing: -1px;
+}
+
+.journey-intro h1 span {
+  color: inherit;
+}
+
+.journey-intro > p {
+  color: #64716c;
+  line-height: 1.65;
+}
+
+.journey-bookmark {
+  color: #4f6368;
+  background: #eef2f2;
+  filter: drop-shadow(1px 0 #d4dddf) drop-shadow(0 1px #d4dddf);
+}
+
+.journey-bookmark:hover,
+.journey-bookmark:focus-visible {
+  color: #3d5960;
+  background: #e3eaeb;
+  filter: drop-shadow(1px 0 #bccacc) drop-shadow(0 1px #bccacc);
+  transform: none;
+}
+
+.journey-bookmark[data-active='true'] {
+  color: #ffffff;
+  background: var(--research-blue-grey);
+  filter: drop-shadow(1px 0 #405a62) drop-shadow(0 1px #405a62);
+}
+
+.chapter-kicker {
+  color: var(--research-green);
+  letter-spacing: 0;
+}
+
+.pixel-button {
+  background: var(--research-green-deep);
+}
+
+.pixel-button:hover,
+.pixel-button:active {
+  background: var(--research-green);
+  transform: none;
+}
+
+.scene-link:hover .journey-scene {
+  transform: none;
+}
+
+.journey-arrows button {
+  border-color: #c9d7d1;
+  color: #2f5b4d;
+  background: #fbfcfb;
+}
+
+.journey-arrows button:hover:not(:disabled) {
+  background: #eaf2ef;
+}
+
+.home-footer {
+  border-color: var(--research-rule);
+}
+
+@media (min-width: 768px) {
+  #nd-docs-layout {
+    --fd-sidebar-width: 276px !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  #nd-docs-layout {
+    --fd-toc-width: 238px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --fd-banner-height: 96px;
+  }
+
+  .site-header {
+    height: 96px;
+  }
+
+  .header-inner {
+    padding: 10px 20px 0;
+  }
+
+  .site-header nav {
+    height: 48px;
+    gap: 26px;
+  }
+
+  #nd-page {
+    padding: 28px 20px 48px;
+  }
+
+  #nd-page > h1 {
+    font-size: 28px;
+    line-height: 1.3;
+    letter-spacing: -0.5px;
+  }
+
+  #nd-page > h1 + p {
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+
+  .prose {
+    font-size: 15.5px;
+  }
+
+  .prose h2 {
+    gap: 8px;
+    margin-top: 1.65em;
+    font-size: 21px;
+  }
+
+  .prose h3 {
+    font-size: 17px;
+  }
+
+  .prose .katex-display {
+    margin-inline: -4px;
+    padding-inline: 12px;
+  }
+
+  .prose table {
+    min-width: 560px;
+  }
+
+  .journey-intro {
+    padding-block: 20px 16px;
+  }
+
+  .journey-intro h1 {
+    font-size: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

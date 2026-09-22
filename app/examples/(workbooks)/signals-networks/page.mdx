@@ -1,0 +1,188 @@
+# 信号与网络算例
+
+<p className="example-lead">通过采样、频谱、互功率谱、坐标变换和 RLC 网络计算连接公式与工程判断。</p>
+
+<span id="peak-decay"></span>
+
+## 从两个峰值估计衰减率
+
+同相位的两个峰值相隔 $2$ s，幅值从 $1.00$ 降到 $0.45$，则
+
+$$
+\hat\sigma=\frac{\ln0.45}{2}\approx-0.399\ \mathrm{s}^{-1}.
+$$
+
+若峰值间隔包含两个周期，则 $f=1$ Hz，$\omega=2\pi$ rad/s，进而
+
+$$
+\hat\zeta\approx
+\frac{0.399}{\sqrt{0.399^2+(2\pi)^2}}
+\approx0.0634.
+$$
+
+该方法要求单一模态在所选时段占主导；多模态拍频、噪声和持续外力会使包络不再是单指数。
+
+对参数 $\rho$ 的简单特征值灵敏度为
+
+$$
+\frac{\partial\lambda_i}{\partial\rho}
+=\frac{\boldsymbol w_i^{\mathsf T}
+(\partial A/\partial\rho)\boldsymbol v_i}
+{\boldsymbol w_i^{\mathsf T}\boldsymbol v_i}.
+$$
+
+实部灵敏度说明参数如何改变衰减率，虚部灵敏度说明频率如何移动。接近重根时，一阶灵敏度可能很大且数值不稳，应结合参数扫描验证。
+
+---
+
+<span id="window-length"></span>
+
+## 时频分析：如何选择窗长
+
+若需区分 $0.80$ Hz 与 $0.90$ Hz 两个稳定分量，仅从 DFT 栅格看至少需要
+
+$$
+T\ge\frac1{0.10}=10\ \mathrm s.
+$$
+
+实际还需更长记录，使窗函数主瓣足够窄并让估计具有统计稳定性。若振荡只持续 3 s，普通长窗 FFT 无法同时获得 0.1 Hz 的频率分辨率和 3 s 内的时间定位，应转向参数化模态估计或多分辨率时频方法。
+
+---
+
+<span id="sampling-aliasing"></span>
+
+## 采样混叠
+
+采样率 $f_s=100$ Hz 时，$70$ Hz 正弦满足
+
+$$
+\cos(2\pi70n/100)=\cos(2\pi30n/100),
+$$
+
+因此离散数据中会表现为 $30$ Hz。采样完成后无法仅凭该序列判断原信号是 30 Hz 还是 70 Hz，必须依赖采样前滤波或更高采样率。
+
+---
+
+<span id="cross-spectrum-delay"></span>
+
+## 由互谱相位估计时延
+
+按上述 $XY^*$ 约定，若在 $f_0=2$ Hz 处互谱相位为 $+72^\circ$，且相位未发生 $2\pi$ 周期歧义，则
+
+$$
+\tau_d=\frac{72^\circ}{360^\circ\times2\ \mathrm{Hz}}
+=0.10\ \mathrm s.
+$$
+
+单频相位还可能对应 $0.10+k/f_0$ s。实际应在一段高相干频带内对展开后的相位斜率拟合，并结合物理传播上限排除周期歧义。
+
+---
+
+<span id="zero-padding"></span>
+
+## 观测长度与零填充
+
+以 $f_s=2\ \mathrm{kHz}$ 采集 $N=2000$ 点，观测时长为 $1\ \mathrm{s}$，所以 $\Delta f=1\ \mathrm{Hz}$。补零到 16000 点后显示间隔变成 $0.125\ \mathrm{Hz}$，但真正的信息分辨能力仍主要由 1 s 原始数据和窗函数主瓣宽度决定。
+
+---
+
+<span id="rlc-state-space"></span>
+
+## 串联 RLC 的状态方程
+
+对电压源 $u$ 驱动的串联 RLC，取 $x_1=i$、$x_2=v_C$，有
+
+$$
+L\dot i=u-Ri-v_C,
+\qquad C\dot v_C=i.
+$$
+
+因此
+
+$$
+\dot{\boldsymbol x}=
+\begin{bmatrix}-R/L&-1/L\\1/C&0\end{bmatrix}\boldsymbol x
++\begin{bmatrix}1/L\\0\end{bmatrix}u.
+$$
+
+其特征方程为
+
+$$
+s^2+\frac RL s+\frac1{LC}=0.
+$$
+
+电阻决定耗散，$LC$ 决定固有频率尺度。这说明端口电路、微分方程与模态分析可以沿同一条链路互相转换。
+
+---
+
+<span id="rlc-resonance"></span>
+
+## 串联 RLC 的谐振与阻尼
+
+$$
+Z(j\omega)=R+j\left(\omega L-\frac1{\omega C}\right).
+$$
+
+虚部为零时
+
+$$
+\omega_0=\frac1{\sqrt{LC}}.
+$$
+
+取 $R=2\ \Omega$、$L=0.1\ \mathrm H$、$C=1\ \mathrm{mF}$，得 $\omega_0=100\ \mathrm{rad/s}$，即 $f_0\approx15.9\ \mathrm{Hz}$。在理想电压源驱动下，此时 $|Z|=R$，电流达到峰值。减小 $R$ 会提高峰值并缩窄谐振带宽，但实际峰值还受源阻抗、控制限幅和参数频变影响。
+
+二端口还常用传输参数
+
+$$
+\begin{bmatrix}V_1\\I_1\end{bmatrix}
+=\begin{bmatrix}A&B\\C&D\end{bmatrix}
+\begin{bmatrix}V_2\\-I_2\end{bmatrix}.
+$$
+
+它适合级联网络，因为相邻模块的传输矩阵可以依次相乘。式中 $-I_2$ 来自两端口电流都按流入网络定义；若采用其他约定，矩阵形式也会变化。
+
+---
+
+<span id="positive-sequence-dq"></span>
+
+## 平衡正序量变为直流量
+
+对 5.1 节的三相量，用功率不变 Clarke 变换可得
+
+$$
+x_\alpha=\sqrt{\frac32}X_m\cos\omega_0t,
+\qquad
+x_\beta=\sqrt{\frac32}X_m\sin\omega_0t.
+$$
+
+若 $\theta=\omega_0t$，则
+
+$$
+\boxed{x_d=\sqrt{\frac32}X_m,\qquad x_q=0}.
+$$
+
+这就是同步旋转坐标中基波稳态量变成常数的原因。若初始角度或 q 轴方向选择不同，常数会分配到 d、q 两轴，但物理量不变。
+
+---
+
+<span id="negative-sequence-dq"></span>
+
+## 负序量在正序同步坐标中的频率
+
+静止坐标中的负序基波可写成
+
+$$
+\underline x^-(t)=X^-e^{-j\omega_0t}.
+$$
+
+变到以 $+\omega_0$ 旋转的 dq 坐标：
+
+$$
+\underline x^-_{dq}(t)
+=X^-e^{-j\omega_0t}e^{-j\omega_0t}
+=X^-e^{-j2\omega_0t}.
+$$
+
+所以负序基波在正序同步 dq 坐标中表现为两倍基频的波动。若改用负序同步坐标，它又会变成直流量。
+
+宽频小扰动中，实信号的共轭对、正负旋转方向和上下边带常同时出现。将 dq 模型转换到序域时，应明确采用复空间矢量还是实二维频响，并保持 $+\Omega$、$-\Omega$ 两个频率分量的配对关系。

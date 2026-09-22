@@ -1,0 +1,300 @@
+---
+title: "1.2 结合微分方程组理解线性代数"
+description: "围绕线性微分方程组讲解矩阵、特征值、矩阵指数、模态分解与参与因子。"
+---
+
+> 本章目标：把线性代数作为求解动态方程的工具。学完后，应能从状态矩阵求出自然响应，读出振荡频率和阻尼，并说明某个模态主要出现在哪些状态中。
+
+## 1.2.1 线性微分方程组的矩阵表示
+
+含 $n$ 个状态的线性时不变系统写成
+
+$$
+\dot{\boldsymbol x}=A\boldsymbol x+B\boldsymbol u,
+\qquad
+\boldsymbol y=C\boldsymbol x+D\boldsymbol u.
+$$
+
+$\boldsymbol x\in\mathbb R^n$ 是状态，$\boldsymbol u$ 是输入，$\boldsymbol y$ 是测量输出。矩阵 $A$ 决定系统自身的动态，$B$ 描述输入如何作用于状态，$C$ 描述状态如何映射到测量量，$D$ 表示输入到输出的直接通道。
+
+例如
+
+$$
+\ddot q+2\dot q+5q=u
+$$
+
+取 $x_1=q$、$x_2=\dot q$，便有
+
+$$
+\dot{\boldsymbol x}=
+\begin{bmatrix}0&1\\-5&-2\end{bmatrix}\boldsymbol x+
+\begin{bmatrix}0\\1\end{bmatrix}u.
+$$
+
+同一个高阶方程可以有多种状态选择，但只要坐标变换可逆，它们描述同一组内部动态。状态变量必须足以由当前值和未来输入唯一决定未来响应；仅把若干测量量堆成向量，并不一定得到状态。
+
+### 平衡点附近的小扰动模型
+
+非线性系统 $\dot{\boldsymbol x}=\boldsymbol f(\boldsymbol x,\boldsymbol u)$ 在平衡点 $(\boldsymbol x_0,\boldsymbol u_0)$ 附近可写成
+
+$$
+\Delta\dot{\boldsymbol x}=A\Delta\boldsymbol x+B\Delta\boldsymbol u,
+\quad
+A=\left.\frac{\partial\boldsymbol f}{\partial\boldsymbol x}\right|_0,
+\quad
+B=\left.\frac{\partial\boldsymbol f}{\partial\boldsymbol u}\right|_0.
+$$
+
+因此后续模态结论只对所选运行点附近的小扰动成立。运行方式或控制参数改变，$A$ 也随之改变。
+
+## 1.2.2 特征值、特征向量与模态分解
+
+先看零输入系统 $\dot{\boldsymbol x}=A\boldsymbol x$。设存在形如
+
+$$
+\boldsymbol x(t)=\boldsymbol v e^{\lambda t}
+$$
+
+的响应，代入得到
+
+$$
+A\boldsymbol v=\lambda\boldsymbol v.
+$$
+
+$\lambda$ 是特征值，非零向量 $\boldsymbol v$ 是右特征向量。特征值由
+
+$$
+\det(\lambda I-A)=0
+$$
+
+确定。对本章的二状态例子，
+
+$$
+\det\begin{bmatrix}\lambda&-1\\5&\lambda+2\end{bmatrix}
+=\lambda^2+2\lambda+5,
+$$
+
+故 $\lambda_{1,2}=-1\pm j2$。这与二阶标量方程的特征根完全相同。
+
+若 $A$ 有 $n$ 个线性无关的右特征向量，组成
+
+$$
+V=[\boldsymbol v_1\ \boldsymbol v_2\ \cdots\ \boldsymbol v_n],
+\qquad
+\Lambda=\operatorname{diag}(\lambda_1,\ldots,\lambda_n),
+$$
+
+则
+
+$$
+A=V\Lambda V^{-1}.
+$$
+
+令模态坐标 $\boldsymbol z=V^{-1}\boldsymbol x$，零输入方程变为
+
+$$
+\dot{\boldsymbol z}=\Lambda\boldsymbol z,
+\qquad
+z_i(t)=z_i(0)e^{\lambda_i t}.
+$$
+
+于是物理坐标中的解为
+
+$$
+\boxed{\boldsymbol x(t)=\sum_{i=1}^{n}\boldsymbol v_i z_i(0)e^{\lambda_i t}}.
+$$
+
+特征值决定每个模态随时间如何变化，右特征向量决定该模态在各状态上的相对形状，初值决定模态被激发的程度。
+
+## 1.2.3 矩阵指数与状态转移矩阵
+
+矩阵指数定义为
+
+$$
+e^{At}=I+At+\frac{(At)^2}{2!}+\frac{(At)^3}{3!}+\cdots.
+$$
+
+它满足
+
+$$
+\frac{\mathrm d}{\mathrm dt}e^{At}=Ae^{At},
+\qquad e^{A0}=I,
+$$
+
+因此状态转移矩阵为 $\Phi(t)=e^{At}$。线性时不变系统的完整解是
+
+$$
+\boxed{
+\boldsymbol x(t)=e^{At}\boldsymbol x(0)
++\int_0^t e^{A(t-\tau)}B\boldsymbol u(\tau)\,\mathrm d\tau}.
+$$
+
+第一项是零输入响应，积分项是零状态响应。它和一阶标量方程的积分因子解具有相同结构。
+
+若 $A=V\Lambda V^{-1}$，则
+
+$$
+e^{At}=Ve^{\Lambda t}V^{-1},
+\qquad
+e^{\Lambda t}=\operatorname{diag}(e^{\lambda_1t},\ldots,e^{\lambda_nt}).
+$$
+
+对二状态例子，可利用 $A+I$ 满足 $(A+I)^2=-4I$，直接得到实矩阵形式
+
+$$
+e^{At}=e^{-t}
+\begin{bmatrix}
+\cos2t+\tfrac12\sin2t&\tfrac12\sin2t\\
+-\tfrac52\sin2t&\cos2t-\tfrac12\sin2t
+\end{bmatrix}.
+$$
+
+代入 $\boldsymbol x(0)=[1\ 0]^\mathsf T$，可与[耦合微分方程组算例](/examples/dynamics/ode-state-system)中的响应相互核对。
+
+## 1.2.4 对角化与解耦求解
+> **配套算例**：[两个实模态的解耦求解 →](/examples/dynamics/linear-two-modes)
+### 输入在模态坐标中的作用
+
+含输入时，令 $\boldsymbol z=V^{-1}\boldsymbol x$，则
+
+$$
+\dot{\boldsymbol z}=\Lambda\boldsymbol z+V^{-1}B\boldsymbol u.
+$$
+
+$V^{-1}B$ 反映输入对各模态的可激发程度；输出矩阵变为 $CV$，反映各模态在测量输出中的可见程度。一个模态即使存在，也可能因输入耦合弱或测点不敏感而难以观测。
+
+## 1.2.5 重根、若尔当标准形与非对角化系统
+
+特征值重复不等于一定不能对角化。只有当某个特征值的线性无关特征向量数量不足时，才需要若尔当链。
+
+例如
+
+$$
+A=\begin{bmatrix}-1&1\\0&-1\end{bmatrix}
+=-I+N,
+\qquad N^2=0.
+$$
+
+由于 $-I$ 与 $N$ 可交换，
+
+$$
+e^{At}=e^{-t}e^{Nt}
+=e^{-t}(I+Nt)
+=e^{-t}\begin{bmatrix}1&t\\0&1\end{bmatrix}.
+$$
+
+若 $\boldsymbol x(0)=[0\ 1]^\mathsf T$，则
+
+$$
+\boldsymbol x(t)=\begin{bmatrix}te^{-t}\\e^{-t}\end{bmatrix}.
+$$
+
+$te^{-t}$ 来自若尔当块，而不是新的特征值。它会造成较明显的暂态放大，但最终仍衰减。非正规矩阵还可能在全部特征值稳定时产生短时能量增长，因此仅看特征值不能完整描述所有暂态幅值问题。
+
+## 1.2.6 复特征值、振荡频率与阻尼
+
+实矩阵的复特征值成共轭对出现。设
+
+$$
+\lambda=\sigma\pm j\omega,
+$$
+
+对应实响应的基本形式为
+
+$$
+e^{\sigma t}\big(a\cos\omega t+b\sin\omega t\big).
+$$
+
+常用量为
+
+$$
+f=\frac{|\omega|}{2\pi},
+\qquad
+\zeta=-\frac{\sigma}{\sqrt{\sigma^2+\omega^2}},
+\qquad
+\tau=\frac1{|\sigma|}\quad(\sigma<0).
+$$
+
+例如 $\lambda=-0.4\pm j6$，则 $f\approx0.955$ Hz，$\zeta\approx0.0665$，包络时间常数为 $2.5$ s。$\sigma<0$ 表示衰减，$\sigma>0$ 表示增长；$\omega=0$ 时是非振荡实模态。
+
+阻尼比是复模态极点相对原点的几何量。不同频率模态仅比较阻尼比可能掩盖衰减速度差异，工程判断通常同时报告 $\sigma$、$f$ 和 $\zeta$。
+
+## 1.2.7 左右特征向量与模态参与因子
+
+右特征向量满足
+
+$$
+A\boldsymbol v_i=\lambda_i\boldsymbol v_i,
+$$
+
+左特征向量写成行向量，满足
+
+$$
+\boldsymbol w_i^{\mathsf T}A=\lambda_i\boldsymbol w_i^{\mathsf T}.
+$$
+
+在可对角化且特征值互异时，可归一化为
+
+$$
+\boldsymbol w_i^{\mathsf T}\boldsymbol v_j=\delta_{ij}.
+$$
+
+于是初始模态幅值为
+
+$$
+z_i(0)=\boldsymbol w_i^{\mathsf T}\boldsymbol x(0).
+$$
+
+右特征向量说明“模态 $i$ 如何出现在各状态中”，左特征向量说明“某个状态扰动如何激发模态 $i$”。常用状态参与因子定义为
+
+$$
+p_{ki}=v_{ki}w_{ik}.
+$$
+
+它用于排序状态 $k$ 与模态 $i$ 的关联程度。参与因子依赖状态定义、单位和归一化方式；比较前应统一标幺、坐标和归一化约定。对复模态，工程报告常比较 $|p_{ki}|$，同时保留复数相位用于解释状态间关系。
+
+### 参数灵敏度
+
+若 $A$ 依赖参数 $\rho$，简单特征值的一阶灵敏度为
+
+$$
+\boxed{
+\frac{\partial\lambda_i}{\partial\rho}
+=\frac{\boldsymbol w_i^{\mathsf T}
+(\partial A/\partial\rho)\boldsymbol v_i}
+{\boldsymbol w_i^{\mathsf T}\boldsymbol v_i}}.
+$$
+
+该式说明参数变化会把极点向复平面的哪个方向移动，是控制器参数整定和阻尼提升分析的基础。
+
+## 1.2.8 坐标变换与物理变量中的模态响应
+
+设采用可逆坐标变换 $\boldsymbol x=T\boldsymbol z$，则
+
+$$
+\dot{\boldsymbol z}=T^{-1}AT\boldsymbol z+T^{-1}B\boldsymbol u,
+\qquad
+\boldsymbol y=CT\boldsymbol z+D\boldsymbol u.
+$$
+
+$A$ 与 $T^{-1}AT$ 相似，因此特征值不变；特征向量的坐标表示、状态参与因子和单个状态的幅值会改变。任何“某状态主导某模态”的结论，都应说明使用的是物理量、标幺量还是变换后的坐标。
+
+对于实系统的一对共轭模态，把它们合成一个实二维子空间比单独解释复特征向量更直观。若
+
+$$
+\boldsymbol v=\boldsymbol a+j\boldsymbol b,
+$$
+
+则相应实响应可写成 $\boldsymbol a$、$\boldsymbol b$ 张成平面内的旋转和伸缩。各状态分量的模态幅值与相位可以由复数 $v_k$ 读出。
+
+## 1.2.9 一套可复用的模态分析流程
+
+1. 在明确运行点、基值和状态定义后建立 $A$。
+2. 计算特征值，先按实部判断稳定性，再换算频率和阻尼比。
+3. 检查特征向量矩阵条件数；条件数很大时，模态结果可能对参数和数值误差敏感。
+4. 用右特征向量观察模态形状，用左特征向量分析激励，用参与因子做初步筛选。
+5. 对关键参数计算特征值灵敏度，并用时域响应或频率响应复核。
+6. 报告坐标、归一化、运行点和计算精度，避免把数值排序当成绝对物理结论。
+
+下一章将把同一系统变换到 $s$ 域。届时 $\det(sI-A)=0$ 给出的极点，正是本章的特征值。
+

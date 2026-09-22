@@ -1,0 +1,57 @@
+# 非线性方程：平衡点与小扰动线性化
+
+考虑归一化的二阶非线性模型
+
+$$
+\ddot\delta+d\dot\delta+k\sin\delta=p,\qquad d>0,\quad k>0.
+$$
+
+此处 $\delta$ 为角度变量，$d$ 为阻尼系数，$k$ 为耦合系数，$p$ 为常值输入；各参数单位与归一化方程保持一致。该形式用于说明角度动态的线性化方法。
+
+**第一步：寻找平衡点。** 平衡时 $\dot\delta=\ddot\delta=0$，因此
+
+$$
+k\sin\delta_0=p.
+$$
+
+只有 $|p|\le k$ 时才存在平衡点；不同的角度分支可能对应不同的局部稳定性。
+
+**第二步：引入小扰动。** 令 $\delta=\delta_0+\Delta\delta$，利用一阶展开
+
+$$
+\sin(\delta_0+\Delta\delta)
+\approx\sin\delta_0+\cos\delta_0\,\Delta\delta.
+$$
+
+代回并消去平衡项，得到
+
+$$
+\Delta\ddot\delta+d\Delta\dot\delta+k\cos\delta_0\,\Delta\delta=0.
+$$
+
+**第三步：代入一组具体参数。** 取 $d=2$、$k=10$、$p=5\sqrt3$，选 $\delta_0=\pi/3$，于是 $k\cos\delta_0=5$。线性化方程变成
+
+$$
+\Delta\ddot\delta+2\Delta\dot\delta+5\Delta\delta=0.
+$$
+
+若 $\Delta\delta(0)=\varepsilon$、$\Delta\dot\delta(0)=0$，则原非线性系统在该平衡点附近的小扰动近似解为
+
+$$
+\boxed{\delta(t)\approx\frac\pi3+
+\varepsilon e^{-t}\left(\cos2t+\frac12\sin2t\right)}.
+$$
+
+这里 $\varepsilon$ 应足够小，使被忽略的高阶项影响较小。对于较大扰动，应求解原非线性方程，不能直接沿用该近似。
+
+若改选同样满足平衡条件的 $\delta_0=2\pi/3$，则线性化特征方程为 $\lambda^2+2\lambda-5=0$，其中 $-1+\sqrt6>0$，对应不稳定平衡点。运行点改变，会改变局部动态特性。
+
+对于一般状态方程 $\dot{\boldsymbol{x}}=\boldsymbol{f}(\boldsymbol{x},\boldsymbol{u})$，先求 $\boldsymbol{f}(\boldsymbol{x}_0,\boldsymbol{u}_0)=0$，再得
+
+$$
+\Delta\dot{\boldsymbol{x}}=A\Delta\boldsymbol{x}+B\Delta\boldsymbol{u},\qquad
+A=\left.\frac{\partial\boldsymbol f}{\partial\boldsymbol x}\right|_0,\quad
+B=\left.\frac{\partial\boldsymbol f}{\partial\boldsymbol u}\right|_0.
+$$
+
+雅可比矩阵 $A$ 连接了非线性模型与后续的模态分析。线性化特征值全部严格位于左半平面时，可判断该平衡点局部渐近稳定；存在正实部特征值时不稳定；出现零实部特征值时，通常还需进一步分析高阶项。

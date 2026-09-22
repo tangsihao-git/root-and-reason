@@ -1,0 +1,166 @@
+---
+title: "3.5 IIO 硬件同步采样与时间戳"
+description: "区分采样时刻、数据到达时刻和软件处理时刻，建立 GNSS、FPGA、ADC、DMA 与 IIO 之间的确定时间关系。"
+---
+
+IIO 可以组织 trigger、buffer 和 timestamp，但这些接口本身不能保证 ADC 在 GNSS 1 PPS 边沿附近完成确定性的同步采样。同步精度首先由参考时钟、硬件触发、ADC 采样时钟和 FPGA 定时逻辑决定；Linux 与 IIO 的主要任务是配置硬件、连续搬运数据，并把已经建立的时间关系完整交给应用程序。
+
+> 对同步量测而言，真正需要证明的是“某个样点对应哪个物理采样时刻”，而不是“数据何时到达 Linux”。
+
+## 3.5.1 三个容易混淆的时刻
+
+一条采样记录至少涉及三个不同时间：
+
+| 时间 | 对应事件 | 主要不确定度 |
+| --- | --- | --- |
+| 采样时刻 $t_{sample}$ | ADC 采样保持、CONVST 或转换起点 | 采样时钟、触发抖动、孔径抖动 |
+| 到达时刻 $t_{arrival}$ | 数据进入 FIFO、DMA 或内存 | 转换延迟、总线调度、缓冲深度 |
+| 处理时刻 $t_{process}$ | 驱动或应用读取并处理数据 | 中断、调度、缓存和系统负载 |
+
+软件时间戳经常更接近 $t_{arrival}$ 或 $t_{process}$。若系统要恢复 $t_{sample}$，必须保留从硬件采样事件到时间基准的确定映射。
+
+## 3.5.2 IIO trigger 的含义与边界
+
+IIO triggered buffer 可以由软件、定时器、GPIO、ADC data-ready 或其他硬件事件启动数据获取。trigger 描述“由哪个事件推动一次采集流程”，但不能单独证明该事件已经与 GNSS 1 PPS 或 UTC 对齐。
+
+判断一个 trigger 是否可用于同步量测，需要继续回答：
+
+1. trigger 的物理来源是什么；
+2. 它触发的是 ADC 采样保持、转换启动，还是仅通知驱动读取数据；
+3. trigger 与 ADC 时钟是否处在同一或确定相关的时钟域；
+4. 多通道和多设备之间的触发偏差是否有界；
+5. 触发后到数据读取之间是否存在与样点编号可对应的固定流水线延迟。
+
+因此，“驱动支持 hardware trigger”和“系统实现同步采样”是两个不同层次的结论。
+
+## 3.5.3 推荐的时钟与触发结构
+
+同步波形或 PMU 前端应把时间同步放在 Linux 以下的硬实时域中：
+
+```text
+GNSS 10 MHz ─→ PLL / Clock Tree ─→ ADC Sample Clock
+
+GNSS 1 PPS ─→ FPGA Timing Logic ─→ PPS Capture
+                         │
+                         ├─→ ADC CONVST / Sample Trigger
+                         └─→ Sample Counter Latch
+
+ADC Data ─→ FPGA FIFO ─→ DMA ─→ IIO Buffer ─→ Application
+```
+
+1 PPS 提供秒边界，受控或同源的高频参考时钟维持秒内采样间隔。只有 PPS 而采样时钟自由运行时，采样频率偏差仍会在两个 PPS 之间积累。若相对频率误差为 $\delta f/f_s$，经过时间 $T$ 产生的时间漂移近似为
+
+$$
+\Delta t(T)\approx \frac{\delta f}{f_s}T.
+$$
+
+FPGA 可以利用 PPS 观测每秒计数值，评估频率偏差、检测丢失的 PPS，并把时钟锁定状态随数据上送。
+
+## 3.5.4 PPS 与样点计数器的映射
+
+无需为每个样点附加完整的 64 位 UTC 时间。更高效的方法是让硬件维护连续 `sample_counter`，并在 PPS 边沿锁存计数器值 $N_{PPS,k}$。若第 $k$ 个 PPS 的绝对时间为 $t_{PPS,k}$，采样频率为 $f_s$，编号为 $N_n$ 的样点时间可写为
+
+$$
+t_n=t_{PPS,k}+\frac{N_n-N_{PPS,k}}{f_s}.
+$$
+
+更完整的误差模型为
+
+$$
+\hat t_n=t_{PPS,k}+\frac{N_n-N_{PPS,k}}{\hat f_s}
++\varepsilon_{PPS}+\varepsilon_{clk,n}
++\varepsilon_{trig,n}+\varepsilon_{pipe}.
+$$
+
+其中 $\varepsilon_{PPS}$ 是秒边界误差，$\varepsilon_{clk,n}$ 描述采样时钟相位误差，$\varepsilon_{trig,n}$ 是触发及 ADC 孔径不确定度，$\varepsilon_{pipe}$ 为可校准的固定流水线偏移。计数器回绕、复位和数据丢块必须显式记录，不能只依靠接收顺序推断。
+
+例如 $f_s=100\,\mathrm{kS/s}$ 时，理想采样周期为 $10\,\mu\mathrm{s}$。Linux 即使在几十毫秒后才处理该 DMA 块，只要样点编号和 PPS 锚点没有丢失，就不会改变样点的物理采样时刻。
+
+## 3.5.5 IIO timestamp 的来源分类
+
+IIO scan 中可以包含 timestamp channel，但应按来源区分：
+
+### 软件或内核时间戳
+
+```text
+ADC 采样 → Data Ready / IRQ → 驱动读取 Linux 时钟
+         → iio_push_to_buffers_with_timestamp()
+```
+
+这类时间受中断、SPI 传输、线程调度和驱动路径影响，通常表示事件被内核处理的时刻。它可以用于数据到达分析或低速传感器排序，不能直接当作高精度 ADC 采样时刻。
+
+### 硬件事件时间戳
+
+```text
+ADC / FPGA 采样事件 → 硬件计数器锁存
+                    → Counter 与 Data 同步进入 FIFO / DMA
+                    → 驱动换算并写入 IIO Buffer
+```
+
+这类时间能够与采样事件建立确定关系，但仍需说明计数器时钟源、分辨率、回绕宽度、捕获事件和 UTC 换算方法。
+
+### 时间锚点与样点索引
+
+系统也可以只上送 PPS 锚点、块首样点计数和连续样本，在用户空间按固定采样周期恢复各样点时间。这种结构传输开销较小，但要求采样时钟连续、数据缺失可检测，且每块的计数信息不可与数据错位。
+
+## 3.5.6 如何审查现成 IIO 驱动
+
+不能只检查 `scan_elements/in_timestamp_en` 是否存在。应从驱动源码和硬件连接向下追踪：
+
+- 时间戳是由 `iio_get_time_ns()` 等内核时钟函数取得，还是来自 ADC／FPGA 寄存器；
+- timestamp 在 IRQ top half、threaded handler、SPI 完成回调还是 DMA 完成后产生；
+- CNV／CONVST、data-ready、PWM、外部 trigger 与 sample clock 如何连接；
+- 使用普通 triggered buffer、SPI offload 还是 IIO backend；
+- DMA 数据中是否包含 sample counter、硬件时间或状态字；
+- 驱动是否处理流水线延迟、首样本无效、通道交织和丢样。
+
+部分 IIO SPI offload 或 backend 路径会直接把硬件数据流送入 DMA buffer，并不附加软件 timestamp。这并不表示数据没有时间关系，也不表示它已经同步；时间含义必须由硬件采样结构和数据格式另行定义。
+
+## 3.5.7 连续采样与缓冲完整性
+
+硬件同步解决“何时采”，FIFO、DMA 与 IIO buffer 解决“如何持续送达”。典型流水线为：
+
+```text
+ADC → FPGA FIFO → DMA → RAM Ring Buffer → IIO Buffer → Application
+```
+
+若数据率为 $R_{data}$，可用缓冲容量为 $C_{buf}$，而应用在一段时间内完全无法消费数据，则缓冲可吸收的最长停顿近似为
+
+$$
+T_{margin}=\frac{C_{buf}}{R_{data}}.
+$$
+
+缓冲无法弥补长期吞吐不足。为了让时间轴可审计，每个 DMA 块至少应带有：块首 `sample_counter`、有效样本数、通道配置版本、时钟锁定状态、PPS 序号以及累计 overrun／drop 计数。发生丢块后，应用必须在时间轴上留下缺口，而不能把后续样本重新连续编号。
+
+## 3.5.8 职责划分
+
+| 功能 | 主要负责者 |
+| --- | --- |
+| ADC 采样保持时刻 | ADC 与 FPGA 硬件触发 |
+| 秒边界 | GNSS 1 PPS 与 FPGA 捕获逻辑 |
+| 秒内采样间隔 | 同源或受控参考时钟、ADC sample clock |
+| 样点与时间的关系 | sample counter、硬件 timestamp 与 PPS 锚点 |
+| 连续数据搬运 | FIFO、DMA 与 IIO buffer |
+| ADC 参数配置 | ADC IIO driver |
+| 绝对时间换算与质量判断 | 驱动元数据及 PMU／波形应用 |
+
+目标不应表述为“IIO 实现 PPS 同步”，而应表述为“硬件完成采样同步，IIO 保真地传递同步结果及其质量信息”。
+
+## 3.5.9 验证方法
+
+同步精度必须通过共同物理事件验证，而不能只观察软件日志时间：
+
+1. 向多台设备输入同一 PPS、参考时钟和模拟测试信号；
+2. 在 FPGA 内同时捕获 PPS、CONVST 和 sample counter；
+3. 比较相同边沿在各设备中的样点编号和插值相位；
+4. 改变 CPU 负载、DMA 块长和中断延迟，确认样点时间不随软件延迟漂移；
+5. 注入 PPS 丢失、参考时钟失锁、DMA overrun 和计数器回绕，检查质量标志与时间轴缺口；
+6. 把测得的触发偏差、时钟误差和 ADC 孔径抖动纳入时间不确定度预算。
+
+## 3.5.10 参考资料
+
+- [Linux 内核：IIO Triggers](https://docs.kernel.org/driver-api/iio/triggers.html)
+- [Linux 内核：IIO Buffers](https://docs.kernel.org/iio/iio_devbuf.html)
+- [Linux 内核：AD7606 驱动与 IIO backend](https://docs.kernel.org/next/iio/ad7606.html)
+- [Linux 内核：AD4691 驱动与 SPI offload](https://docs.kernel.org/iio/ad4691.html)
+

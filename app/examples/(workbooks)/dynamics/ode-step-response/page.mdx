@@ -1,0 +1,66 @@
+import { SolutionWalkthrough } from '../../../../../components/solution-walkthrough';
+
+# 一阶阶跃响应：积分因子法
+
+下面把推导拆成四个阶段。每次只显示当前一步，右侧曲线会随推导进度逐段展开；得到结果后还可以拖动滑块读取任意时刻的状态值。
+
+<SolutionWalkthrough
+  title="积分因子法求一阶阶跃响应"
+  problem={String.raw`\dot x+2x=4,\qquad x(0)=1,\qquad t\ge0`}
+  steps={[
+    {
+      title: '选择积分因子',
+      body: '把方程与标准形式对照，得到 a(t)=2。积分因子由系数 a(t) 的积分构造。',
+      formula: String.raw`\mu(t)=e^{\int a(t)\,\mathrm dt}=e^{\int 2\,\mathrm dt}=e^{2t}`,
+      insight: '积分因子的目的，是把左边两个分散的项组合成一个乘积的导数。',
+    },
+    {
+      title: '把左端合成整体导数',
+      body: '方程两侧同乘积分因子，再用乘积求导公式识别左端。',
+      formula: String.raw`e^{2t}\dot x+2e^{2t}x=4e^{2t}\quad\Longrightarrow\quad\frac{\mathrm d}{\mathrm dt}\!\left(e^{2t}x\right)=4e^{2t}`,
+      insight: '此时未知函数 x 和它的导数已经被装进同一个导数中，方程可以直接积分。',
+    },
+    {
+      title: '从初始时刻积分',
+      body: '积分上下限取 0 到 t，初值 x(0)=1 会自然进入左端，无需再额外求积分常数。',
+      formula: String.raw`e^{2t}x(t)-1=\int_0^t4e^{2\tau}\,\mathrm d\tau=2\left(e^{2t}-1\right)`,
+      insight: '定积分写法把初值直接嵌入推导，能够减少遗漏常数或代错初值的风险。',
+    },
+    {
+      title: '整理结果并检查',
+      body: '解出 x(t)，再检查初值、导数和长期趋势是否同时满足原问题。',
+      formula: String.raw`\boxed{x(t)=2-e^{-2t}},\qquad x(0)=1,\qquad\lim_{t\to\infty}x(t)=2`,
+      insight: '常数 2 是平衡值，-e^{-2t} 是由初值产生并逐渐消失的暂态项。',
+    },
+  ]}
+  visual="first-order-step"
+/>
+
+### 两种分解方式不要混淆
+
+按“齐次解 + 特解”分解，可以写成
+
+$$
+x(t)=\underbrace{-e^{-2t}}_{x_h(t)}+\underbrace{2}_{x_p(t)}.
+$$
+
+齐次解满足齐次方程，特解只需是非齐次方程的一个解，通常不单独满足给定初值。
+
+按“零输入响应 + 零状态响应”分解，则为
+
+$$
+x(t)=\underbrace{e^{-2t}}_{\text{保留初值，输入置零}}
++\underbrace{2(1-e^{-2t})}_{\text{初值置零，保留输入}}.
+$$
+
+这两种分解的总和相同，但各项含义不同。零状态响应本身也可以包含衰减的瞬态项。
+
+对于常系数方程 $\dot x+ax=b(t)$，积分因子法给出
+
+$$
+x(t)=e^{-at}x(0)+\int_0^t e^{-a(t-\tau)}b(\tau)\,\mathrm d\tau.
+$$
+
+积分项表示不同时刻的输入对当前状态的累积影响。后续将用卷积和传递函数重新理解这一表达式。
+
+**同题的另一种做法：** [用拉普拉斯变换求一阶阶跃响应](/examples/dynamics/laplace/first-order)。

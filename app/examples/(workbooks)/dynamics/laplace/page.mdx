@@ -1,0 +1,46 @@
+# 拉普拉斯变换求解
+
+> 下面把本章规则用于五个典型初值问题，逐步展示“变换 → 代数求解 → 逆变换”。可返回第一章，对照时域方法阅读。
+
+### 使用前只需知道的规则
+
+记 $X(s)=\mathcal L\{x(t)\}$。本页采用单边拉普拉斯变换，初值取 $0^-$；示例在起始时刻没有冲激输入，相关状态连续，因此与第一章采用的 $x(0)$ 一致。所有解均写在 $t\ge0$ 上。
+
+$$
+\mathcal L\{\dot x\}=sX(s)-x(0^-),
+$$
+
+$$
+\mathcal L\{\ddot x\}=s^2X(s)-sx(0^-)-\dot x(0^-).
+$$
+
+记 $H(t)$ 为单位阶跃，$j^2=-1$。下面列出本页用到的变换对，默认取收敛域中的 $s$。
+
+| 时域函数（$t\ge0$） | 拉普拉斯域表达式 |
+|---|---|
+| $1$ | $1/s$ |
+| $e^{-at}$ | $1/(s+a)$ |
+| $\cos\omega t$ | $s/(s^2+\omega^2)$ |
+| $\sin\omega t$ | $\omega/(s^2+\omega^2)$ |
+| $e^{-at}\cos\omega t$ | $(s+a)/[(s+a)^2+\omega^2]$ |
+| $e^{-at}\sin\omega t$ | $\omega/[(s+a)^2+\omega^2]$ |
+
+变换具有线性性，因此可以把分式拆成上述形式后逐项还原。
+
+## 选择算例
+
+- [一阶阶跃响应：保留非零初值 →](/examples/dynamics/laplace/first-order)
+- [二阶自由振荡：处理两个初始条件 →](/examples/dynamics/laplace/free-oscillation)
+- [二阶阶跃响应 →](/examples/dynamics/laplace/second-order-step)
+- [联立求解耦合微分方程组 →](/examples/dynamics/laplace/state-system)
+- [延时施加输入 →](/examples/dynamics/laplace/delayed-input)
+
+## 现阶段需要记住的边界
+
+拉普拉斯变换对线性常系数初值问题尤其方便：导数变成含初值项的代数表达式，再通过逆变换找回时间函数。它不能把一般非线性方程自动变成容易求解的代数方程。
+
+若写 $G(s)=Y(s)/U(s)$ 作为传递函数，需要明确采用零初始条件；非零初值的贡献应另行保留。初值定理和终值定理可用于核对结果，但不能替代对适用条件的检查。尤其在持续振荡或不稳定系统中，不应直接使用终值定理。
+
+---
+
+[上一章：线性代数](/docs/foundations/dynamics/linear-algebra) · [下一章：端口网络](/docs/foundations/networks/port-networks)

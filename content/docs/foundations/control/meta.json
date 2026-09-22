@@ -1,0 +1,11 @@
+{
+  "title": "4. 自动控制理论",
+  "pages": [
+    "feedback-models",
+    "bode",
+    "nyquist",
+    "root-locus",
+    "lead-lag",
+    "pll"
+  ]
+}

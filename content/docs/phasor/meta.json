@@ -1,0 +1,10 @@
+{
+  "title": "测量算法",
+  "pages": [
+    "electrical",
+    "power-quality",
+    "estimation",
+    "devices"
+  ],
+  "icon": "phasor"
+}

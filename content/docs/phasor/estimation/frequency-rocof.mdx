@@ -1,0 +1,92 @@
+---
+title: "3.7 频率与 ROCOF 估计"
+description: "从相量相角、动态模型和平滑微分获得频率及频率变化率。"
+---
+
+若相量相角相对于标称频率为 $\theta(t)$，则
+
+$$
+f(t)=f_0+\frac{1}{2\pi}\frac{\mathrm d\theta}{\mathrm dt},
+\qquad
+\operatorname{ROCOF}(t)=\frac{1}{2\pi}\frac{\mathrm d^2\theta}{\mathrm dt^2}.
+$$
+
+## 3.7.1 相角差分
+
+相邻报告点间隔为 $\Delta T$ 时，频率可近似为
+
+$$
+\hat f_k=f_0+
+\frac{\operatorname{unwrap}(\theta_k-\theta_{k-1})}
+{2\pi\Delta T}.
+$$
+
+相位展开必须正确处理跨越 $\pm\pi$ 的情况。ROCOF 再做一次差分会显著放大相角噪声。
+
+## 3.7.2 窗内拟合
+
+更稳健的方法是在多个报告点上拟合相位多项式，或从 Taylor-Fourier 模型直接取得导数。平滑窗口越长，随机噪声越小，动态延迟和瞬态平均效应越明显。
+
+## 3.7.3 时间标记与异常处理
+
+频率和 ROCOF 应对应明确的时间参考。相角跳变、失去同步、缺帧和重新锁定会产生很大的伪 ROCOF，必须结合时间质量与数据状态剔除。测量对象和电能质量应用见[频率与频率变化率](/docs/phasor/power-quality/frequency)。
+
+## 3.7.4 中心差分与多项式拟合
+
+三点中心差分为
+
+$$
+\hat f_k=f_0+
+\frac{\theta_{k+1}-\theta_{k-1}}{4\pi\Delta T},
+$$
+
+其结果对应 $t_k$，但需要等待未来一个样本。对窗口内展开后的相角拟合
+
+$$
+\theta(t)=c_0+c_1(t-t_0)+\frac12c_2(t-t_0)^2
+$$
+
+则 $\hat f(t_0)=f_0+c_1/(2\pi)$，$\widehat{\mathrm{ROCOF}}(t_0)=c_2/(2\pi)$。使用对称时间坐标可改善条件数。
+
+## 3.7.5 从复相量导数计算
+
+若动态算法同时给出 $X,\dot X,\ddot X$，可避免显式相位展开：
+
+$$
+\Delta f=\frac1{2\pi}\operatorname{Im}\left(\frac{\dot X}{X}\right),
+$$
+
+$$
+\mathrm{ROCOF}=\frac1{2\pi}\operatorname{Im}\left(
+\frac{\ddot X}{X}-\left(\frac{\dot X}{X}\right)^2
+\right).
+$$
+
+该方法仍会在 $|X|$ 很小时失稳，需要幅值门限和残差判断。
+
+## 3.7.6 噪声、带宽与延迟
+
+若相角白噪声标准差为 $\sigma_\theta$，简单一阶差分的频率噪声量级与 $\sigma_\theta/\Delta T$ 成正比，二阶差分的 ROCOF 噪声与 $\sigma_\theta/\Delta T^2$ 成正比。提高报告率而不增加平滑，可能让 ROCOF 更差。
+
+应把估计器看成滤波器：给出有效带宽、群时延和阶跃响应。保护需要快响应，惯量估计更重视低偏差，振荡监测则关心特定频带，三者可能采用不同参数。
+> **配套算例**：[频率斜坡与 ROCOF →](/examples/measurement#frequency-ramp)
+## 3.7.7 异常和质量状态
+
+以下情况会产生伪频率或伪 ROCOF：
+
+- 相角在 $\pm\pi$ 处未正确展开；
+- 时间戳重复、跳变或报告间隔计算错误；
+- 基波幅值在暂降中接近噪声底；
+- 算法重新初始化导致内部相位重置；
+- 数据丢帧后仍按固定 $\Delta T$ 差分；
+- 窗口跨越相角阶跃或开关暂态。
+
+输出应携带相量质量、时间质量、算法锁定状态和导数有效标志。异常样本不宜用零填充后继续求导。
+
+## 3.7.8 验证与报告
+
+测试至少包含恒频、不同偏频、频率斜坡、频率阶跃、幅相调制、谐波、带外干扰、噪声、暂降和时间错误。报告除最大误差外，还应给出延迟、响应时间、噪声标准差和无效标志动作。
+
+## 3.7.9 官方参考
+
+- [IEEE/IEC 60255-118-1-2018：频率与 ROCOF 测量](https://standards.ieee.org/ieee/60255-118-1/5724/)

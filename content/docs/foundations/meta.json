@@ -1,0 +1,10 @@
+{
+  "title": "理论基础",
+  "pages": [
+    "dynamics",
+    "signals",
+    "networks",
+    "control"
+  ],
+  "icon": "foundations"
+}

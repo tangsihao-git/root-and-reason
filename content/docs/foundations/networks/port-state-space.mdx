@@ -1,0 +1,355 @@
+---
+title: "3.3 端口与状态空间分析"
+description: "从内部状态模型推导端口阻抗与导纳，建立端口互联、闭环特征值、描述系统和无源性之间的统一关系。"
+---
+
+> 本章目标：把“内部状态如何运动”和“端口上能够测到什么”连接起来。重点不是在状态空间与阻抗方法之间二选一，而是理解两种表示保留了哪些信息、在什么条件下等价，以及互联后如何共同决定系统模态。
+
+## 3.3.1 内部状态与外部端口
+
+状态空间模型描述系统内部储能、控制器记忆和动态耦合；端口模型只保留边界上的输入—输出关系。对一个在工作点附近线性化的设备，可写成
+
+$$
+\begin{aligned}
+\Delta\dot{\boldsymbol x}
+&=A\Delta\boldsymbol x+B_p\Delta\boldsymbol u_p+B_r\Delta\boldsymbol r,\\
+\Delta\boldsymbol y_p
+&=C_p\Delta\boldsymbol x+D_{pp}\Delta\boldsymbol u_p+D_{pr}\Delta\boldsymbol r.
+\end{aligned}
+$$
+
+其中：
+
+- $\boldsymbol x$ 是电感电流、电容电压、转子运动和控制器积分量等内部状态；
+- $\boldsymbol u_p$、$\boldsymbol y_p$ 是端口变量；
+- $\boldsymbol r$ 是功率指令、电压参考或机械输入等外部激励；
+- $D_{pp}$ 描述输入对输出的瞬时通道，也称直接馈通。
+
+电气端口通常选择功率共轭变量，使瞬时端口功率可写为
+
+$$
+p(t)=\boldsymbol v^{\mathsf T}(t)\boldsymbol i(t).
+$$
+
+最常见的两种输入—输出选择是：
+
+| 端口输入 | 端口输出 | 得到的模型 | 常见用途 |
+| --- | --- | --- | --- |
+| $\boldsymbol v$ | $\boldsymbol i$ | 导纳 $Y(s)$ | 并联设备、节点导纳和电流注入模型 |
+| $\boldsymbol i$ | $\boldsymbol v$ | 阻抗 $Z(s)$ | 串联网络、电压响应和源阻抗模型 |
+
+输入和输出的选择改变 $B_p$、$C_p$、$D_{pp}$，但不改变设备本身。建模时必须同时写明电流正方向、电压极性、坐标系和功率符号约定。
+
+## 3.3.2 从状态空间到端口传递矩阵
+
+先忽略参考输入，并对状态方程作拉普拉斯变换：
+
+$$
+(sI-A)\Delta\boldsymbol X(s)
+=\Delta\boldsymbol x(0)+B_p\Delta\boldsymbol U_p(s).
+$$
+
+代入输出方程，得到
+
+$$
+\Delta\boldsymbol Y_p(s)
+=G_p(s)\Delta\boldsymbol U_p(s)
++C_p(sI-A)^{-1}\Delta\boldsymbol x(0),
+$$
+
+其中零初始条件下的端口传递矩阵为
+
+$$
+\boxed{
+G_p(s)=C_p(sI-A)^{-1}B_p+D_{pp}
+}.
+$$
+
+若电压是输入、电流是输出，则 $G_p(s)=Y(s)$；若电流是输入、电压是输出，则 $G_p(s)=Z(s)$。初始状态项不能在分析自然响应时随意删除：传递函数采用零初值定义，而系统模态正是非零初始状态或内部扰动所激发的自由响应。
+
+$D_{pp}$ 不一定意味着模型错误。纯电阻、代数网络和控制器中的电压前馈都会形成直接馈通。它决定高频极限和互联中的代数环，数值上必须与采样、延时和滤波模型保持一致。
+
+### 阻抗与导纳并非总能直接互换
+
+若 $Y(s)$ 在研究频带内非奇异，可形式上写成 $Z(s)=Y^{-1}(s)$。但矩阵求逆可能产生以下问题：
+
+- 某些频率处 $Y(s)$ 奇异，阻抗不存在或数值极不稳定；
+- 严格真有理导纳求逆后可能成为非真有理函数；
+- 被求逆的矩阵会混合通道，使单个元素不再具有原来的物理含义；
+- 极零相消可能隐藏内部不稳定模态。
+
+因此，需要阻抗模型时，优先根据“电流输入—电压输出”的物理因果关系重新建立实现；若只能从导纳求逆，应检查可逆频带、因果性和实现阶次。
+
+## 3.3.3 极点、零点与端口可见性
+
+$A$ 的特征值给出完整内部模型的候选模态，而端口传递矩阵的极点只包含能够被该端口输入激发、又能被该端口输出观察到的模态。某个特征值若对应不可控或不可观方向，可能不出现在 $G_p(s)$ 中。
+
+对简单特征值 $\lambda_k$，在其附近可写成
+
+$$
+G_p(s)\approx
+\frac{C_p\boldsymbol v_k\boldsymbol w_k^{\mathsf T}B_p}
+{s-\lambda_k}+G_{\rm reg}(s),
+$$
+
+其中 $\boldsymbol v_k$、$\boldsymbol w_k$ 分别是右、左特征向量。残差矩阵
+
+$$
+R_k=C_p\boldsymbol v_k\boldsymbol w_k^{\mathsf T}B_p
+$$
+
+同时包含端口对该模态的可控性和可观性。残差很小不代表模态不存在，只说明它在当前端口组合中不明显。
+
+多输入多输出系统的传输零点由 Rosenbrock 系统矩阵的秩下降确定：
+
+$$
+\mathcal P(s)=
+\begin{bmatrix}
+sI-A&-B_p\\
+C_p&D_{pp}
+\end{bmatrix}.
+$$
+
+右半平面传输零点会限制闭环响应速度和相位裕度。只检查 $A$ 的特征值无法发现这些输入—输出约束，只检查某个标量通道又可能遗漏其他方向上的耦合。
+
+## 3.3.4 描述系统与代数约束
+
+电力网络中常同时存在微分状态和代数变量。保留节点电压、理想约束或静态控制关系后，模型更自然地写成描述系统
+
+$$
+E\Delta\dot{\boldsymbol x}
+=A\Delta\boldsymbol x+B_p\Delta\boldsymbol u_p,
+\qquad
+\Delta\boldsymbol y_p=C_p\Delta\boldsymbol x+D_{pp}\Delta\boldsymbol u_p.
+$$
+
+这里 $E$ 可以是奇异矩阵。对应端口传递矩阵为
+
+$$
+G_p(s)=C_p(sE-A)^{-1}B_p+D_{pp}.
+$$
+
+分析前应确认矩阵铅笔 $sE-A$ 正则，即 $\det(sE-A)$ 不恒为零；还要检查代数约束是否一致、是否含冲激模态，以及初值是否满足约束。直接消去代数变量虽然可以得到普通状态方程，但消元矩阵接近奇异时会放大数值误差，并可能掩盖网络拓扑改变造成的结构问题。
+
+对于含理想电压源、理想变压器、开关约束或零直接馈通的互联模型，描述系统通常比强行构造显式 $\dot{\boldsymbol x}=A\boldsymbol x$ 更稳妥。
+
+## 3.3.5 端口互联如何形成闭环状态矩阵
+
+考虑两个子系统在同一电压端口并联。规定 $i_1$、$i_2$ 均为流入各子系统的电流，则
+
+$$
+\begin{aligned}
+\dot{\boldsymbol x}_1&=A_1\boldsymbol x_1+B_1\boldsymbol v,
+&\boldsymbol i_1&=C_1\boldsymbol x_1+D_1\boldsymbol v,\\
+\dot{\boldsymbol x}_2&=A_2\boldsymbol x_2+B_2\boldsymbol v,
+&\boldsymbol i_2&=C_2\boldsymbol x_2+D_2\boldsymbol v.
+\end{aligned}
+$$
+
+自然响应下，公共节点满足 KCL：
+
+$$
+\boldsymbol i_1+\boldsymbol i_2=0.
+$$
+
+定义
+
+$$
+A_0=\operatorname{diag}(A_1,A_2),\quad
+B_0=\begin{bmatrix}B_1\\B_2\end{bmatrix},\quad
+C_0=\begin{bmatrix}C_1&C_2\end{bmatrix},\quad
+D_\Sigma=D_1+D_2.
+$$
+
+若 $D_\Sigma$ 可逆，可由 KCL 解出
+
+$$
+\boldsymbol v=-D_\Sigma^{-1}C_0\boldsymbol x,
+\qquad
+\boldsymbol x=\begin{bmatrix}\boldsymbol x_1^{\mathsf T}&\boldsymbol x_2^{\mathsf T}\end{bmatrix}^{\mathsf T},
+$$
+
+从而得到互联系统状态矩阵
+
+$$
+\boxed{
+A_{\rm int}=A_0-B_0D_\Sigma^{-1}C_0
+}.
+$$
+
+这个式子说明，互联并不是简单拼接两组特征值。公共端口通过 $B_0D_\Sigma^{-1}C_0$ 形成反馈，使原有模态移动，也可能产生新的弱阻尼组合。
+
+若存在外部注入电流 $\boldsymbol i_{\rm ext}$，KCL 改为 $\boldsymbol i_1+\boldsymbol i_2=\boldsymbol i_{\rm ext}$，则
+
+$$
+\dot{\boldsymbol x}=A_{\rm int}\boldsymbol x
++B_0D_\Sigma^{-1}\boldsymbol i_{\rm ext}.
+$$
+
+若 $D_\Sigma$ 不可逆，不能直接使用上述消元式。此时端口电压与状态之间形成代数约束，应保留为描述系统，或者重新选择端口因果关系。忽略这一点会造成奇异代数环或人为引入极高频动态。
+
+## 3.3.6 端口特征方程与状态特征值
+
+两个子系统的端口导纳分别为
+
+$$
+Y_k(s)=C_k(sI-A_k)^{-1}B_k+D_k.
+$$
+
+自然响应要求公共电压非零且 KCL 成立，因此端口特征条件为
+
+$$
+\boxed{
+\det\big[Y_1(s)+Y_2(s)\big]=0
+}.
+$$
+
+在上一节的可逆条件下，可利用矩阵行列式引理得到
+
+$$
+\det(sI-A_{\rm int})
+=\det(sI-A_0)
+\frac{\det\big[Y_1(s)+Y_2(s)\big]}{\det(D_\Sigma)}.
+$$
+
+该关系把状态空间特征值与端口特征方程连接起来，但使用时必须注意：
+
+1. $sI-A_0$ 的极点处可能与端口行列式发生解析消去；
+2. 不可控或不可观模态不会完整出现在端口传递矩阵中；
+3. 非最小实现、纯延时和频率拟合模型会改变行列式的数值性质；
+4. 若子系统本身含右半平面极点，不能只根据交越点套用简单阻抗比判据。
+
+因此，$\det[Y_1+Y_2]=0$ 是模块化分析的重要入口，但在白盒模型可得时，应与 $A_{\rm int}$ 的特征值、模态残差和时域响应相互核对。
+
+## 3.3.7 参考输入、内部源与自然响应
+
+受控设备的端口电流通常不只由端口电压决定：
+
+$$
+\Delta\boldsymbol i(s)
+=Y(s)\Delta\boldsymbol v(s)
++G_r(s)\Delta\boldsymbol r(s)
++C_i(sI-A)^{-1}\Delta\boldsymbol x(0).
+$$
+
+三项分别表示：
+
+- 端口电压扰动引起的闭环电流响应；
+- 参考值、机械功率或直流侧扰动形成的内部源；
+- 初始储能和控制器状态形成的自由响应。
+
+阻抗稳定性研究通常令外部参考扰动为零，分析互联后的自然模态；振荡溯源则需要保留 $G_r(s)\Delta\boldsymbol r(s)$，否则会把持续受迫振荡误判为负阻尼自激。端口模型回答“扰动如何通过边界传播”，状态模型进一步回答“扰动从哪个内部状态或控制通道产生”。
+
+## 3.3.8 状态空间中的能量与无源性
+
+当端口变量满足供给率 $w=\boldsymbol u_p^{\mathsf T}\boldsymbol y_p$ 时，可选择二次储能函数
+
+$$
+V(\boldsymbol x)=\frac12\boldsymbol x^{\mathsf T}P\boldsymbol x,
+\qquad P=P^{\mathsf T}\succ0.
+$$
+
+对系统
+
+$$
+\dot{\boldsymbol x}=A\boldsymbol x+B\boldsymbol u,
+\qquad
+\boldsymbol y=C\boldsymbol x+D\boldsymbol u,
+$$
+
+若存在 $P\succ0$ 使
+
+$$
+\begin{bmatrix}
+A^{\mathsf T}P+PA&PB-C^{\mathsf T}\\
+B^{\mathsf T}P-C&-(D+D^{\mathsf T})
+\end{bmatrix}
+\preceq0,
+$$
+
+则系统满足 $\dot V\le\boldsymbol u^{\mathsf T}\boldsymbol y$，即内部储能的增长不超过端口输入的功率。该线性矩阵不等式是正实性与耗散理论在状态空间中的常用表达。
+
+严格不等式可给出耗散裕度。若模型含纯延时、频率相关权重或有限频带要求，需要使用扩展耗散条件，不能仅在若干离散频点检查 $\operatorname{Re}Y(j\omega)$。
+
+## 3.3.9 状态坐标变换与端口不变量
+
+令 $\boldsymbol x=T\boldsymbol z$，其中 $T$ 为常数非奇异矩阵，则
+
+$$
+\begin{aligned}
+A_z&=T^{-1}AT,&B_z&=T^{-1}B,\\
+C_z&=CT,&D_z&=D.
+\end{aligned}
+$$
+
+变换后的端口传递矩阵仍满足
+
+$$
+C_z(sI-A_z)^{-1}B_z+D_z
+=C(sI-A)^{-1}B+D.
+$$
+
+因此，特征值和端口频率响应在相似变换下不变，而单个状态分量、状态尺度和参与因子的数值会改变。工程解释必须区分“坐标相关的内部量”和“端口可测的不变量”。
+
+若 $T(t)$ 随时间变化，例如 Park 变换，还会出现 $-T^{-1}\dot T$ 项；若端口变量也变换，应采用功率不变形式，保证 $\boldsymbol v^{\mathsf T}\boldsymbol i$ 在坐标变换前后保持一致。相关频率映射见[坐标变换与多变量系统](/docs/foundations/networks/coordinates)。
+
+## 3.3.10 串联 RLC 的端口状态模型
+
+以端口电压 $v$ 为输入、支路电流 $i$ 为输出，选取
+
+$$
+\boldsymbol x=\begin{bmatrix}i&v_C\end{bmatrix}^{\mathsf T}.
+$$
+
+串联 RLC 的状态模型为
+
+$$
+\dot{\boldsymbol x}
+=
+\begin{bmatrix}
+-R/L&-1/L\\
+1/C&0
+\end{bmatrix}\boldsymbol x
++
+\begin{bmatrix}1/L\\0\end{bmatrix}v,
+\qquad
+i=\begin{bmatrix}1&0\end{bmatrix}\boldsymbol x.
+$$
+
+由状态空间公式得到端口导纳
+
+$$
+Y(s)=\frac{I(s)}{V(s)}
+=\frac{sC}{LCs^2+RCs+1}.
+$$
+
+其极点与状态矩阵的特征值一致，因为端口能够激发并观察两个储能状态。形式求逆得到
+
+$$
+Z(s)=\frac1{Y(s)}=sL+R+\frac1{sC}.
+$$
+
+$Z(s)$ 含 $sL$，作为普通“电流输入—电压输出”传递函数并非真有理。这并不违背物理规律，而是说明理想电感电压依赖电流导数。若需要可执行的显式状态模型，应保留描述形式、引入实际高频动态，或根据具体互联重新选择因果关系。
+
+## 3.3.11 模型选择与联合分析流程
+
+| 研究问题 | 首选表示 | 必须补充的检查 |
+| --- | --- | --- |
+| 哪个内部环节主导模态 | 完整状态空间 | 参与因子、残差与参数灵敏度 |
+| 两个厂商模型能否模块化互联 | 端口阻抗/导纳 | 端口方向、右半平面极点与频率耦合 |
+| 网络含大量代数节点 | 描述系统 | 正则性、约束一致性与数值尺度 |
+| 只有扫频或现场注入数据 | 拟合端口模型 | 因果性、稳定性、阶次和带外外推 |
+| 需要证明能量不会持续产生 | 无源/耗散模型 | 功率共轭变量与严格裕度 |
+
+推荐按以下顺序组织分析：
+
+1. 在同一工作点线性化设备和网络，记录状态、端口、方向、基值与坐标系。
+2. 用 $A$ 的特征值识别内部候选模态，并检查输入可控性和输出可观性。
+3. 从同一状态模型生成端口 $Y(s)$ 或 $Z(s)$，与解析电路或扫频数据核对。
+4. 按实际拓扑互联端口，检查代数环是否良定，再形成 $A_{\rm int}$ 或描述系统矩阵铅笔。
+5. 比较闭环特征值、端口行列式／广义奈奎斯特轨迹和时域扰动响应。
+6. 在多个运行点、网络强度和控制参数下重复验证，避免把单一工况结论外推到整个频带。
+
+状态空间、端口模型和测量数据分别提供内部机制、模块化边界和现实约束。三者在相同工作点与符号约定下相互映射，才能形成可复核的宽频振荡分析结论。
+
+

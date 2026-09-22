@@ -1,0 +1,98 @@
+---
+title: "1.1 一阶常系数线性常微分方程"
+description: "从一个具体电路方程出发，读懂名称、表达形式、求解目标与基本方法。"
+---
+
+> 本章目标：看见一个一阶常系数线性常微分方程时，能够读懂每一项的含义，分辨显式与隐式写法，明确要求解的是关于时间的函数，并知道应选择哪一种基本方法。
+
+## 1.1.1 一阶常系数线性常微分方程
+
+先看一个由电压源、电阻和电感组成的串联 RL 电路，如[图 1.1](#figure-series-rl)所示。回路中只有一条电流通路，因此电阻和电感中流过同一个电流 $i(t)$。
+
+<DocFigure
+  id="figure-series-rl"
+  src="/images/foundations/series-rl-circuit.svg"
+  alt="电压源、电阻和电感组成的串联 RL 电路，电流 i(t) 沿回路流动"
+  label="图 1.1"
+  caption="串联 RL 电路。输入电压为 $v(t)$，$R$ 与 $L$ 中流过同一电流 $i(t)$。"
+  kind="schematic"
+/>
+
+沿回路应用基尔霍夫电压定律：电阻电压与电感电压之和等于输入电压，于是得到：
+
+$$
+L\frac{\mathrm di}{\mathrm dt}+Ri=v(t). \label{eq:rl-current}
+$$
+
+式中，$t$ 是时间，$i(t)$ 是需要求出的电流，$v(t)$ 是已知输入。
+
+[[eq:rl-current]]是典型的<u>**一阶线性常微分方程**</u>：**一阶**是指方程中最高阶导数只有 $\mathrm di/\mathrm dt$，没有二阶或更高阶导数；**线性**是因为 $i(t)$ 及其导数都只以一次幂出现，彼此不相乘，也不进入平方、正弦等非线性函数；这里的“线性”只描述方程怎样使用待求函数，并不要求输入 $v(t)$ 必须是直线或常数。**常微分方程**是因为待求的电流只有时间 $t$ 这一个自变量。
+
+因此，一阶常系数线性常微分方程可以统一写成
+
+$$
+a\dot x(t)+b x(t)=u(t),\qquad a\ne 0. \label{eq:first-order-general}
+$$
+
+其中 $a$、$b$ 是常数，$u(t)$ 是已知输入，$x(t)$ 是待求函数。
+
+## 1.1.2 显式形式、隐式形式与求解目标
+
+同一个微分方程可以采用不同写法。把状态、变化率和输入共同写成一个约束，得到隐式形式
+
+$$
+F(t,x,\dot x)=a\dot x+b x-u(t)=0. \label{eq:first-order-implicit}
+$$
+
+如果能够把最高阶导数单独留在等号左侧，就得到显式形式
+
+$$
+\dot x=-\frac{b}{a}x+\frac{1}{a}u(t). \label{eq:first-order-explicit}
+$$
+
+两种写法表达的是同一个关系，但提供的信息不同。**显式形式**直接给出当前状态和输入所对应的变化速度，适合代入初值、判断变量能否分离，也便于逐步进行数值计算。**隐式形式**只说明几项之间必须满足什么约束；求解前通常要先确认能否从约束中唯一地解出 $\dot x$。对本章的方程，由于 $a\ne0$，隐式形式总能整理成显式形式，因此两者得到的解完全相同。若最高阶导数无法被单独解出，就不能直接套用普通的显式求解步骤，而要继续处理约束本身，或采用能够直接处理隐式关系的数值方法。
+
+完成这一步判断后，求解目标才明确：给定输入 $u(t)$ 和初值 $x(t_0)=x_0$，寻找完整的时间函数 $x(t)$，使它既满足微分方程，也在初始时刻取到指定值。只给方程而不给初值，通常得到的是一族解，而不是唯一的一条时间轨迹。
+
+<span id="first-order-methods"></span>
+
+## 1.1.3 一阶方程怎么求解
+
+对于一阶常系数线性方程 $a\dot x+b x=u(t)$，给定初值 $x(t_0)=x_0$ 后，时域中的一般解为
+
+$$
+x(t)=\underbrace{e^{-\frac{b}{a}(t-t_0)}x_0}_{\text{自然响应}}
++\underbrace{\frac{1}{a}\int_{t_0}^{t}e^{-\frac{b}{a}(t-\tau)}u(\tau)\,\mathrm d\tau}_{\text{受迫响应}}. \label{eq:first-order-solution}
+$$
+
+这个表达式已经覆盖任意已知的 $u(t)$：初始状态产生自然响应，输入在各个历史时刻的作用经过系统加权后累积成受迫响应。常见输入之所以分别讨论，是因为它们能够把积分进一步化成容易观察的解析式。
+
+| 输入 $u(t)$ 的形式 | 时域中的处理 | 方法或示例 |
+|---|---|---|
+| $u(t)=0$ | 只剩自然响应，解为单个指数项 | [分离变量法：一阶自由衰减示例](/examples/dynamics/ode-free-decay/?from=%2Fdocs%2Ffoundations%2Fdynamics%2Fode%2F%23first-order-methods) |
+| 常数 $u(t)=u_0$ | 求常数特解 $u_0/b$，再叠加自然响应 | [齐次解加常数特解](/examples/dynamics/ode-step-response/?from=%2Fdocs%2Ffoundations%2Fdynamics%2Fode%2F%23first-order-methods) |
+| 阶跃输入 | 在跳变前后分段求解；跳变后按常数输入处理，并继承跳变时刻的状态 | [一阶阶跃响应示例](/examples/dynamics/ode-step-response/?from=%2Fdocs%2Ffoundations%2Fdynamics%2Fode%2F%23first-order-methods) |
+| 指数输入 $Ue^{st}$ | 设特解具有相同的指数形式；若它与自然响应重合，则再乘以 $t$ | [齐次解加特解](/examples/dynamics/ode-periodic-input/?from=%2Fdocs%2Ffoundations%2Fdynamics%2Fode%2F%23first-order-methods) |
+| 正弦输入 $U\cos(\omega t+\varphi)$ | 用同频正弦、余弦或复指数表示特解，再叠加暂态项 | [周期输入示例](/examples/dynamics/ode-periodic-input/?from=%2Fdocs%2Ffoundations%2Fdynamics%2Fode%2F%23first-order-methods) |
+| 一般已知的 $u(t)$ | 保留卷积积分，或对积分进行数值计算 | [[eq:first-order-solution\|积分因子得到的一般解]] |
+| 常见因果输入的统一处理 | 把微分和初值转成代数关系，最后再返回时域 | [拉普拉斯变换法](/docs/foundations/dynamics/laplace/) |
+
+因此，时域法并没有在一般 $u(t)$ 下失效。教材常集中讨论零输入、常数、阶跃、指数和正弦，只是因为这些输入能得到简洁的闭式表达，便于直接看出时间常数、稳态值、幅值和相位。对于形状任意但已知的输入，[[eq:first-order-solution]]仍然成立；积分若不能化成初等函数，可以保留为积分表达式，也可以用数值积分或数值微分方程求解器计算。拉普拉斯变换则特别适合把初值、阶跃、分段、延时和冲激放进同一套代数运算中，但它最终仍可能需要查表、数值反演或返回时域计算。
+
+## 1.1.4 从解析式读懂动态过程
+
+当输入是常数 $u(t)=u_0$ 且 $b\ne0$ 时，解析式可以整理为
+
+$$
+x(t)=\frac{u_0}{b}+\left(x_0-\frac{u_0}{b}\right)e^{-\frac{b}{a}(t-t_0)}. \label{eq:first-order-step-response}
+$$
+
+这个表达式把动态过程分成两部分：
+
+- $u_0/b$ 是输入不再变化后趋向的稳态值；
+- 指数项记录初值与稳态值之间的差，并决定这段差异怎样随时间消失或扩大。
+
+当 $a$、$b$ 同号时，指数项随时间衰减。此时 $\tau=a/b$ 称为时间常数；经过一个时间常数，初始偏差约剩原来的 $36.8\%$。因此，解析式不仅给出“某时刻是多少”，还直接揭示系统最终去向和变化快慢。
+
+得到结果后，应做三个简单检查：把 $t=t_0$ 代入是否得到 $x_0$；把 $x(t)$ 及其导数代回原方程是否成立；长期趋势是否符合方程中参数的物理意义。
+

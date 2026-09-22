@@ -1,0 +1,196 @@
+---
+title: "3.4 坐标变换与多变量系统"
+description: "统一三相空间矢量、Clarke/Park 变换、序分量与多变量频率映射。"
+---
+
+> 本章目标：能够在 abc、$\alpha\beta0$、dq 和正负序坐标之间转换，理解旋转坐标系为何会移动频率，并识别多变量模型中的耦合项。本文统一采用功率不变的 Clarke 变换和逆时针为正的旋转方向。
+
+## 3.4.1 三相系统与空间矢量
+
+把三相瞬时量写成
+
+$$
+\boldsymbol x_{abc}=
+\begin{bmatrix}x_a&x_b&x_c\end{bmatrix}^{\mathsf T}.
+$$
+
+平衡正序正弦量可表示为
+
+$$
+\begin{aligned}
+x_a&=X_m\cos\omega_0t,\\
+x_b&=X_m\cos(\omega_0t-2\pi/3),\\
+x_c&=X_m\cos(\omega_0t+2\pi/3).
+\end{aligned}
+$$
+
+三相之和为零，三个变量实际位于二维平面。空间矢量把该平面中的信息写成一个复数：
+
+$$
+\underline x=\frac23
+\left(x_a+ax_b+a^2x_c\right),
+\qquad a=e^{j2\pi/3}.
+$$
+
+按这个幅值不变定义，上述平衡正序量给出 $\underline x=X_me^{j\omega_0t}$。若使用功率不变 Clarke 变换，数值会相差固定比例；比较模型或数据时应先确认标度。
+
+零序分量
+
+$$
+x_0=\frac13(x_a+x_b+x_c)
+$$
+
+不能由只保留二维空间矢量的模型恢复。三线制无零序通道时可省略，含中性线、接地回路或共模现象时必须保留。
+
+## 3.4.2 Clarke 变换与 Park 变换
+
+本章采用功率不变 Clarke 变换
+
+$$
+\begin{bmatrix}x_\alpha\\x_\beta\\x_0\end{bmatrix}
+=T_C\boldsymbol x_{abc},
+\qquad
+T_C=\sqrt{\frac23}
+\begin{bmatrix}
+1&-\tfrac12&-\tfrac12\\
+0&\tfrac{\sqrt3}{2}&-\tfrac{\sqrt3}{2}\\
+\tfrac1{\sqrt2}&\tfrac1{\sqrt2}&\tfrac1{\sqrt2}
+\end{bmatrix}.
+$$
+
+$T_C$ 是正交矩阵，因此 $T_C^{-1}=T_C^{\mathsf T}$，并保持二次型：
+
+$$
+\boldsymbol v_{abc}^{\mathsf T}\boldsymbol i_{abc}
+=\boldsymbol v_{\alpha\beta0}^{\mathsf T}\boldsymbol i_{\alpha\beta0}.
+$$
+
+Park 变换把 $\alpha\beta$ 坐标绕角度 $\theta$ 顺时针旋转到 dq 坐标：
+
+$$
+\begin{bmatrix}x_d\\x_q\end{bmatrix}
+=T_P(\theta)
+\begin{bmatrix}x_\alpha\\x_\beta\end{bmatrix},
+\qquad
+T_P(\theta)=
+\begin{bmatrix}
+\cos\theta&\sin\theta\\
+-\sin\theta&\cos\theta
+\end{bmatrix}.
+$$
+
+复数形式最直观：
+
+$$
+x_d+jx_q=(x_\alpha+jx_\beta)e^{-j\theta}.
+$$
+> **配套算例**：[平衡正序量变为直流量 →](/examples/signals-networks#positive-sequence-dq)
+## 3.4.3 静止坐标系和旋转坐标系
+
+时变坐标变换会给微分方程带来附加项。设
+
+$$
+\boldsymbol x_{dq}=T_P(\theta)\boldsymbol x_{\alpha\beta},
+\qquad \dot\theta=\omega_r,
+$$
+
+则
+
+$$
+\dot{\boldsymbol x}_{dq}
+=T_P\dot{\boldsymbol x}_{\alpha\beta}
+-\omega_rJ\boldsymbol x_{dq},
+\qquad
+J=\begin{bmatrix}0&-1\\1&0\end{bmatrix}.
+$$
+
+附加的 $-\omega_rJ\boldsymbol x_{dq}$ 造成 d、q 轴交叉耦合。以对称 RL 支路为例，静止坐标中
+
+$$
+\boldsymbol v_{\alpha\beta}
+=R\boldsymbol i_{\alpha\beta}+L\dot{\boldsymbol i}_{\alpha\beta},
+$$
+
+变到以 $\omega_r$ 旋转的 dq 坐标后为
+
+$$
+\boldsymbol v_{dq}
+=R\boldsymbol i_{dq}+L\dot{\boldsymbol i}_{dq}
++\omega_rLJ\boldsymbol i_{dq}.
+$$
+
+展开可见
+
+$$
+v_d=Ri_d+L\dot i_d-\omega_rLi_q,
+\qquad
+v_q=Ri_q+L\dot i_q+\omega_rLi_d.
+$$
+
+这些耦合项不是新的物理元件，而是旋转坐标的导数造成的。
+
+### 频率平移
+
+若静止坐标空间矢量含 $e^{j\omega t}$，则在角速度 $\omega_r$ 的 dq 坐标中变成
+
+$$
+e^{j\omega t}e^{-j\omega_rt}=e^{j(\omega-\omega_r)t}.
+$$
+
+因此同步基波 $\omega=\omega_r=\omega_0$ 映射到直流；静止坐标中 $\omega_0+\Omega$ 的正向分量映射到 dq 中的 $\Omega$。报告频率时必须注明坐标系和基频，否则“5 Hz 分量”可能指 dq 扰动频率，也可能指静止坐标中的绝对频率。
+
+## 3.4.4 正负序分量与频率映射
+
+对同一频率的三相相量，Fortescue 对称分量变换写成
+
+$$
+\begin{bmatrix}X_0\\X_1\\X_2\end{bmatrix}
+=\frac13
+\begin{bmatrix}
+1&1&1\\
+1&a&a^2\\
+1&a^2&a
+\end{bmatrix}
+\begin{bmatrix}X_a\\X_b\\X_c\end{bmatrix},
+$$
+
+其中 $X_1$、$X_2$ 分别为正序和负序相量。正序空间矢量沿正方向旋转，负序沿反方向旋转。
+> **配套算例**：[负序量在正序同步坐标中的频率 →](/examples/signals-networks#negative-sequence-dq)
+## 3.4.5 dq 耦合、序耦合与多输入多输出模型
+
+线性化后的 dq 端口关系通常为
+
+$$
+\begin{bmatrix}\Delta i_d\\\Delta i_q\end{bmatrix}
+=
+\underbrace{\begin{bmatrix}
+Y_{dd}(s)&Y_{dq}(s)\\
+Y_{qd}(s)&Y_{qq}(s)
+\end{bmatrix}}_{Y_{dq}(s)}
+\begin{bmatrix}\Delta v_d\\\Delta v_q\end{bmatrix}.
+$$
+
+非对角元素描述轴间耦合。电网不平衡、PLL、功率控制、饱和线性化以及坐标变换都可能使耦合增强。只有在模型结构允许且误差可接受时，才能把矩阵近似为两个独立标量通道。
+
+在复序域中，也可写成
+
+$$
+\begin{bmatrix}\Delta I^+\\\Delta I^-\end{bmatrix}
+=
+\begin{bmatrix}
+Y_{++}&Y_{+-}\\
+Y_{-+}&Y_{--}
+\end{bmatrix}
+\begin{bmatrix}\Delta V^+\\\Delta V^-\end{bmatrix}.
+$$
+
+$Y_{+-}$ 和 $Y_{-+}$ 表示正负序耦合。坐标变换本身不会消除真实耦合，只会改变其表示。对矩阵频率响应，稳定性应检查闭环矩阵的特征轨迹、行列式或奇异值等整体量，而不是只画 $Y_{dd}$ 一条曲线。
+
+### 坐标变换检查表
+
+1. 写明 Clarke 变换是幅值不变还是功率不变。
+2. 写明相序、q 轴正方向、旋转方向和初始角度。
+3. 变换导数时保留 $\dot T T^{-1}$ 产生的耦合项。
+4. 报告频率时注明 abc、$\alpha\beta$、dq 或序域，以及基频。
+5. 用功率不变量或逆变换重构误差检查实现。
+

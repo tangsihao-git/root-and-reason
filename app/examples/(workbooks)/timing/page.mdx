@@ -1,0 +1,15 @@
+# 时间同步算例
+
+<p className="example-lead">以载波锁相环为例，完成从环路指标到参数的定量设计。</p>
+
+<span id="clock-loop-parameters"></span>
+
+## 载波 PLL 参数设计
+
+将 $K_dK_0$ 归一化为 1，取 $\omega_n=12\ \mathrm{rad/s}$、$\zeta=0.8$，则
+
+$$
+K_i=144,\qquad K_p=19.2.
+$$
+
+零点位于 $\omega_z=7.5\ \mathrm{rad/s}$。实现时还要把相位误差单位、NCO 灵敏度与采样周期代回。参数越大，拉入和动态跟踪越快，但更多热噪声、量化噪声和参考抖动会进入输出。

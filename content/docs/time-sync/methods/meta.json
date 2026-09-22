@@ -1,0 +1,8 @@
+{
+  "title": "2. 同步方法与实现",
+  "pages": [
+    "satellite-timing",
+    "signal-time-recovery",
+    "network-sync"
+  ]
+}

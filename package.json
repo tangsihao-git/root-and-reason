@@ -1,0 +1,46 @@
+{
+  "name": "power-system-library",
+  "private": true,
+  "type": "module",
+  "description": "电力系统宽频振荡：理论与方法",
+  "scripts": {
+    "dev": "node tools/dev.mjs",
+    "build": "node tools/prepare-docs.mjs && next build --webpack && pagefind --site out && node tools/write-redirects.cjs",
+    "check": "node tools/prepare-docs.mjs && tsc --noEmit",
+    "docs:renumber": "node tools/renumber-docs.cjs",
+    "preview": "node tools/serve-static.mjs"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.8.0",
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@next/mdx": "16.3.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "gray-matter": "^4.0.3",
+    "katex": "^0.16.22",
+    "lucide-react": "^1.47.0",
+    "next": "16.3.4",
+    "pagefind": "^1.5.2",
+    "pixelarticons": "2.4.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "rehype-katex": "^7.0.1",
+    "rehype-slug": "^6.0.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-mdx-frontmatter": "^5.2.0",
+    "tailwind-merge": "^3.7.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  }
+}

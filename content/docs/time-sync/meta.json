@@ -1,0 +1,9 @@
+{
+  "title": "时间同步",
+  "pages": [
+    "clocks",
+    "methods",
+    "pll"
+  ],
+  "icon": "time-sync"
+}

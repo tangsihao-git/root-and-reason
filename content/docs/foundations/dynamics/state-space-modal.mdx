@@ -1,0 +1,148 @@
+---
+title: "1.4 状态空间与模态分析"
+description: "从状态变量、状态转移矩阵到特征模态、参与因子与灵敏度，连接微分方程和电力系统小扰动分析。"
+---
+
+状态空间方法把多个相互耦合的微分方程组织成矩阵模型。它既能保留系统内部状态，也能把稳定性、振荡频率、阻尼、输入作用和测量可见性放在同一框架中分析。阅读本章前，可先复习[线性代数与微分方程组](/docs/foundations/dynamics/linear-algebra)。
+
+## 1.4.1 状态、输入、输出与工作点
+
+连续时间非线性系统可写为
+
+$$
+\dot{\boldsymbol x}=\boldsymbol f(\boldsymbol x,\boldsymbol u),
+\qquad
+\boldsymbol y=\boldsymbol g(\boldsymbol x,\boldsymbol u).
+$$
+
+$\boldsymbol x$ 是能够决定后续运动的最小状态集合，$\boldsymbol u$ 是外部输入，$\boldsymbol y$ 是可测输出。状态不必都能直接测量，例如同步机转子角、控制器积分状态和滤波器内部状态都可能属于 $\boldsymbol x$。
+
+在平衡点 $(\boldsymbol x_0,\boldsymbol u_0)$ 附近满足 $\boldsymbol f(\boldsymbol x_0,\boldsymbol u_0)=0$。令 $\Delta\boldsymbol x=\boldsymbol x-\boldsymbol x_0$，一阶线性化得到
+
+$$
+\Delta\dot{\boldsymbol x}=A\Delta\boldsymbol x+B\Delta\boldsymbol u,
+\qquad
+\Delta\boldsymbol y=C\Delta\boldsymbol x+D\Delta\boldsymbol u,
+$$
+
+其中 $A=\left.\partial\boldsymbol f/\partial\boldsymbol x\right|_0$，其特征值决定局部自由响应。线性化结论只对该工作点附近的小扰动有效；运行方式显著变化时需要重新求平衡点和雅可比矩阵。
+
+## 1.4.2 状态转移矩阵与完整响应
+
+对线性时不变系统 $\dot{\boldsymbol x}=A\boldsymbol x+B\boldsymbol u$，状态转移矩阵为
+
+$$
+\Phi(t)=e^{At},\qquad \dot\Phi(t)=A\Phi(t),\qquad \Phi(0)=I.
+$$
+
+从 $t_0$ 到 $t$ 的完整响应是
+
+$$
+\boldsymbol x(t)=e^{A(t-t_0)}\boldsymbol x(t_0)
++\int_{t_0}^{t}e^{A(t-\tau)}B\boldsymbol u(\tau)\,\mathrm d\tau.
+$$
+
+第一项是初值引起的自由响应，第二项是输入引起的受迫响应。数值计算时通常不直接展开幂级数，而使用缩放平方、Padé 逼近或 Krylov 子空间方法。若只需计算 $e^{At}\boldsymbol v$，直接求矩阵指数与向量的乘积比形成完整 $e^{At}$ 更高效。
+
+离散采样周期为 $T_s$、零阶保持输入时，精确离散模型为
+
+$$
+\boldsymbol x_{k+1}=A_d\boldsymbol x_k+B_d\boldsymbol u_k,
+\quad A_d=e^{AT_s},
+\quad B_d=\int_0^{T_s}e^{A\tau}B\,\mathrm d\tau.
+$$
+
+## 1.4.3 特征值、频率与阻尼
+
+若 $A$ 可对角化，则 $A=V\Lambda V^{-1}$，自由响应可分解为若干模态。实特征值对应指数衰减或增长；共轭复特征值
+
+$$
+\lambda_i=\sigma_i\pm j\omega_i
+$$
+
+对应振荡模态。其频率和阻尼比分别为
+
+$$
+f_i=\frac{|\omega_i|}{2\pi},
+\qquad
+\zeta_i=-\frac{\sigma_i}{\sqrt{\sigma_i^2+\omega_i^2}}.
+$$
+
+$\sigma_i<0$ 表示衰减，$\sigma_i>0$ 表示发散。阻尼比描述每个振荡周期衰减多少，而不是响应的绝对幅值；某一模态是否在测量中明显，还取决于初始扰动、输入位置和输出通道。
+> **配套算例**：[二阶振荡模态的频率与阻尼 →](/examples/dynamics/state-space-oscillation)
+## 1.4.4 左右特征向量与参与因子
+
+右特征向量 $\boldsymbol v_i$ 和左特征向量 $\boldsymbol w_i$ 满足
+
+$$
+A\boldsymbol v_i=\lambda_i\boldsymbol v_i,
+\qquad
+\boldsymbol w_i^{\mathsf T}A=\lambda_i\boldsymbol w_i^{\mathsf T}.
+$$
+
+令 $\boldsymbol w_i^{\mathsf T}\boldsymbol v_j=\delta_{ij}$，则第 $k$ 个状态对第 $i$ 个模态的参与因子常定义为
+
+$$
+p_{ki}=v_{ki}w_{ik}.
+$$
+
+参与因子同时考虑“该模态在状态中的形状”和“该状态激发该模态的能力”。它依赖状态变量的尺度和模型坐标，比较前应统一标幺值、单位和归一化约定。复数参与因子可保留相位信息，工程排序时常使用 $|p_{ki}|$ 或归一化幅值。
+
+## 1.4.5 可控性、可观性与模态残差
+
+系统可控性矩阵和可观性矩阵分别为
+
+$$
+\mathcal C=[B\ AB\ \cdots\ A^{n-1}B],
+\qquad
+\mathcal O=\begin{bmatrix}C\\CA\\\vdots\\CA^{n-1}\end{bmatrix}.
+$$
+
+若它们均满秩，则所有状态分别可由输入控制、可由输出重构。大系统更适合用可控/可观 Gramian、PBH 判据或逐模态指标，避免高次矩阵幂带来的病态问题。
+
+从输入 $u_r$ 到输出 $y_q$ 的传递函数在简单极点 $\lambda_i$ 附近可写为
+
+$$
+G_{qr}(s)\approx\frac{R_{i,qr}}{s-\lambda_i},
+\qquad
+R_{i,qr}=(C\boldsymbol v_i)_q(\boldsymbol w_i^{\mathsf T}B)_r.
+$$
+
+残差 $R_{i,qr}$ 同时反映输入对模态的可控性和输出对模态的可观性。安装阻尼控制器或选择 PMU 通道时，仅看参与因子不够，还应比较候选输入—输出通道的模态残差。
+
+## 1.4.6 特征值灵敏度与控制位置
+
+参数 $\alpha$ 变化时，简单特征值的一阶灵敏度为
+
+$$
+\frac{\partial\lambda_i}{\partial\alpha}
+=\boldsymbol w_i^{\mathsf T}
+\frac{\partial A}{\partial\alpha}
+\boldsymbol v_i,
+$$
+
+前提是左右特征向量已按 $\boldsymbol w_i^{\mathsf T}\boldsymbol v_i=1$ 归一化。灵敏度的实部说明参数如何改变衰减率，虚部说明频率如何移动。它适合小幅参数调整的方向判断，较大改动仍需重新线性化并验证时域响应。
+
+## 1.4.7 非正规系统、数值尺度与模型校验
+
+即使所有特征值都位于左半平面，非正规矩阵仍可能产生明显的暂态放大。此时特征向量条件数、伪谱和最大奇异值响应比单独的特征值更能揭示风险。建模时还应注意：
+
+- 把角度、速度、电压和控制器状态换成合理标幺尺度；
+- 检查代数变量消元是否引入病态矩阵；
+- 对非常接近的重复模态使用 Schur 分解，避免不稳定的特征向量解释；
+- 用小扰动时域仿真核对线性模型的频率、阻尼与输出相位；
+- 用实测环降、Prony 或子空间辨识结果交叉验证关键模态。
+
+状态空间模型提供的是“哪一个动态在系统中存在”；测量和辨识进一步回答“它是否被激发、在哪里可见以及参数是否与实际一致”。
+
+## 1.4.8 从内部状态到端口模型
+
+当输入和输出选择为端口上的电压、电流时，状态空间模型可以压缩为阻抗或导纳传递矩阵：
+
+$$
+G_p(s)=C_p(sI-A)^{-1}B_p+D_{pp}.
+$$
+
+状态空间保留内部模态、状态参与和参数灵敏度；端口模型隐藏内部实现，只保留外部可测的边界关系。两者并不包含完全相同的信息：不可控或不可观模态可能不出现在 $G_p(s)$ 中，端口传输零点也不能仅由 $A$ 的特征值判断。
+
+多个设备通过公共电压、电流互联后，端口约束会反馈到内部状态并形成新的闭环状态矩阵。关于直接馈通、描述系统、互联消元、端口特征方程和无源性条件的完整推导，见[端口与状态空间分析](/docs/foundations/networks/port-state-space)。

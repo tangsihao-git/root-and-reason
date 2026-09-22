@@ -1,0 +1,11 @@
+{
+  "title": "2.2 典型设备与控制",
+  "pages": [
+    "overview",
+    "wind-turbines",
+    "svg-ups",
+    "grid-forming-vsg",
+    "storage-dcdc"
+  ]
+}
+

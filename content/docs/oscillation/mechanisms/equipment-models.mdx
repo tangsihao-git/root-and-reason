@@ -1,0 +1,89 @@
+---
+title: "2.2 典型设备与网络建模"
+description: "旧版入口：典型电力电子设备内容已整理为分层专题。"
+---
+
+> 本节已扩展为[典型设备与控制专题](/docs/oscillation/mechanisms/equipment/overview)。专题分别介绍风电机组、SVG、UPS、虚拟同步机及储能 DC/DC 变换器，并统一说明拓扑、控制、状态变量和宽频振荡风险。下面保留原有概览，已有书签仍可继续访问。
+
+建模的目标不是复制设备的每个细节，而是在研究频带内保留决定端口动态的状态、控制和时延。一个模型是否“足够好”，应由它能否复现实测端口响应、关键模态和参数变化趋势来判断。
+
+## 2.2.1 统一的端口视角
+
+在运行点附近线性化后，设备可表示为状态空间模型
+
+$$
+\Delta\dot{\boldsymbol x}=\boldsymbol A\Delta\boldsymbol x+
+\boldsymbol B\Delta\boldsymbol u,
+\qquad
+\Delta\boldsymbol y=\boldsymbol C\Delta\boldsymbol x+
+\boldsymbol D\Delta\boldsymbol u.
+$$
+
+消去内部状态得到端口传递矩阵
+
+$$
+\boldsymbol G(s)=\boldsymbol C(s\boldsymbol I-\boldsymbol A)^{-1}\boldsymbol B+\boldsymbol D.
+$$
+
+选电压为输入、电流为输出得到导纳 $\boldsymbol Y(s)$；反向则得到阻抗 $\boldsymbol Z(s)$。端口模型便于保护厂商控制细节，也便于通过扫频辨识，但必须明确电流正方向、坐标系、基值和工作点。
+
+## 2.2.2 同步机、励磁与调速系统
+
+低频机电分析至少保留转子角和转速：
+
+$$
+\dot\delta=\omega_b\Delta\omega,
+\qquad
+2H\Delta\dot\omega=\Delta P_m-\Delta P_e-D\Delta\omega.
+$$
+
+励磁系统改变电磁转矩的同步与阻尼分量，调速器和原动机影响更慢的有功动态。研究轴系次同步谐振时，需要把单质量模型替换为多质量扭振模型；研究定子暂态或更高频动态时，则要提升电机电磁模型阶次。
+
+## 2.2.3 跟网型变流器
+
+典型跟网型结构包含 PLL、电流内环、功率或直流电压外环、限流逻辑及滤波器。弱网中端口电压受注入电流明显影响，形成闭环链路：
+
+$$
+\Delta\boldsymbol i\rightarrow \boldsymbol Z_g(s)\Delta\boldsymbol i
+\rightarrow \Delta\boldsymbol v_{PCC}\rightarrow
+\Delta\theta_{PLL}\rightarrow\Delta\boldsymbol i.
+$$
+
+如果只保留理想电流源，会漏掉这条产生负阻尼的反馈。PLL 带宽、外环带宽、电流环解耦和电压前馈都可能改变端口阻抗。
+
+## 2.2.4 构网型变流器、储能与柔性装置
+
+构网控制通常把装置表现为受控电压源，并通过下垂、虚拟同步机、功率同步或匹配控制建立频率和电压。其慢环决定功率同步动态，虚拟阻抗和电压／电流内环决定中高频端口特性。储能还受 SOC、直流侧电压和功率限值约束；MMC-HVDC 需要考虑内部能量与环流动态；SVC、STATCOM 和串补装置则可能改变网络的谐振位置与阻尼。
+
+## 2.2.5 线路、变压器、滤波器与串补
+
+低频研究可使用代数网络或基频相量模型；频率升高后，线路分布参数、电缆电容、变压器漏抗和 LCL 滤波器不能再被折叠为单一电抗。简单串联 $RLC$ 支路的谐振频率为
+
+$$
+\omega_r=\frac{1}{\sqrt{LC}},
+$$
+
+但真实系统的谐振峰由多端口网络和设备控制共同塑造，应通过节点导纳、频率扫描或 EMT 模型确认。
+
+## 2.2.6 数字控制、采样与时延
+
+采样、计算和 PWM 更新可近似为总时延
+
+$$
+G_d(s)=e^{-sT_d},
+$$
+
+它在频率 $\omega$ 处带来 $-\omega T_d$ 的相位滞后。低频模型中忽略数百微秒的时延通常影响很小，但在数百赫兹附近可能显著降低相位裕度。离散模型还需保留零阶保持、计算顺序、同步采样和饱和／限幅状态机。
+
+## 2.2.7 模型层级与验证
+
+| 任务 | 推荐模型 | 关键验证量 |
+| --- | --- | --- |
+| 大系统低频模态 | RMS／相量域状态空间 | 特征值、振型、扰动衰减 |
+| 次同步筛查 | 频率扫描与线性阻抗 | 谐振频率、阻尼／奈奎斯特裕度 |
+| 控制耦合定位 | dq、序域或谐波线性化模型 | 频率耦合、端口扫频 |
+| 快速暂态和限幅 | EMT 与离散控制模型 | 波形、保护动作、限流恢复 |
+
+验证应覆盖多个运行点。推荐依次做稳态潮流一致性、单设备端口扫频、关键参数灵敏度、扰动波形和现场事件回放。
+
+相关基础见[端口网络](/docs/foundations/networks/port-networks)、[状态空间与模态分析](/docs/foundations/dynamics/state-space-modal)和[PLL](/docs/foundations/control/pll)。

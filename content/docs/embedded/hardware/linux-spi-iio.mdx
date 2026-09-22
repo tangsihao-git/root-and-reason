@@ -1,0 +1,142 @@
+---
+title: "3.4 Linux SPI ADC 与 IIO 数据链"
+description: "梳理设备树、SPI 设备驱动、控制器驱动、IIO 接口、DMA 缓冲及硬件采样时间之间的关系。"
+---
+
+Linux 采集系统中，SPI、ADC 驱动和 IIO 分别解决不同问题：SPI 负责传输，具体 ADC 驱动理解芯片寄存器与功能，IIO 则把同类测量设备以统一方式提供给用户空间。
+
+## 3.4.1 硬件与软件层次
+
+典型硬件链路为：
+
+```text
+CPU Core
+   ↓ 片内互连与 MMIO
+SPI Controller（SoC 内部）
+   ↓ CS / SCLK / MOSI / MISO
+外部 ADC
+```
+
+CPU 操作的是 SPI 控制器寄存器、FIFO 和 DMA 通道。具体 ADC 的配置字和数据格式由 ADC 驱动按照器件协议组织，再由 SPI 控制器变成引脚时序。
+
+| 层级 | 主要职责 |
+| --- | --- |
+| ADC Driver | 理解芯片通道、量程、采样率、触发和寄存器协议 |
+| SPI Core | 维护控制器与从设备模型，调度 `spi_message`／`spi_transfer` |
+| SPI Controller Driver | 操作 SoC 控制器寄存器、FIFO、DMA 与中断 |
+| SPI Controller Hardware | 产生 CS、SCLK、MOSI 并采集 MISO |
+
+可以概括为：ADC 驱动决定“传输什么”，控制器驱动决定“如何通过这颗 SoC 发出去”。
+
+## 3.4.2 设备树、设备创建与驱动匹配
+
+SPI 缺少类似 USB 的通用枚举机制，系统通常需要通过设备树、ACPI 或板级信息预先描述从设备。一个简化节点为：
+
+```text
+&spi0 {
+    status = "okay";
+
+    adc@0 {
+        compatible = "vendor,adc123";
+        reg = <0>;                 /* chip select 0 */
+        spi-max-frequency = <20000000>;
+    };
+};
+```
+
+设备树描述板上存在什么硬件及其连接关系，不描述驱动的内部算法。内核据此建立 `spi_device`，总线匹配逻辑根据 `compatible` 等信息寻找驱动并调用 `probe()`。`probe()` 一般完成资源申请、芯片识别、复位、默认配置和上层子系统注册。
+
+```text
+Device Tree / firmware description
+        ↓
+spi_device
+        ↓ match
+ADC Driver → probe()
+        ↓
+注册 IIO Device 与通道能力
+```
+
+## 3.4.3 IIO 的统一设备语义
+
+Industrial I/O（IIO）面向 ADC、DAC、惯性传感器和环境传感器等设备。驱动通过 `iio_dev`、通道描述和回调向 IIO Core 声明：
+
+- 有哪些电压或电流通道；
+- 是否支持 `RAW`、`SCALE`、采样频率和校准参数；
+- 是否支持 trigger、hardware FIFO 和 buffer；
+- 扫描数据的排列、位宽、符号和字节序。
+
+IIO Core 再提供两类常见用户接口：
+
+```text
+/sys/bus/iio/devices/iio:deviceX/   单值、属性与配置
+/dev/iio:deviceX                    缓冲数据与事件
+```
+
+例如读取 `in_voltage0_raw` 时，sysfs 请求进入 IIO Core，再调用驱动对应的 `read_raw` 回调；驱动组织 SPI 传输并解析 ADC 返回值。驱动注册能力和回调，标准接口主要由 IIO Core 建立。
+
+## 3.4.4 运行期调用链与文件描述符
+
+设备树主要用于启动期的设备创建和驱动绑定。用户程序成功 `open()` 后得到的文件描述符关联已建立的内核文件对象和设备对象，后续操作不会反复遍历设备树：
+
+```text
+启动：Device Tree → spi_device → Driver probe → IIO 注册
+
+运行：Application → fd / IIO ABI → IIO Core
+                    → ADC Driver → SPI Core
+                    → Controller Driver → ADC
+```
+
+`fd` 是进程引用内核对象的句柄，不是硬件地址，也不保存一份设备树副本。设备移除、驱动解绑或错误恢复时，对象生命周期仍需要由内核引用计数和驱动状态机正确处理。
+
+## 3.4.5 单值读取与连续采样
+
+sysfs 适合配置或低速读取单个当前值。连续采样通常采用硬件 FIFO、DMA、IIO buffer 和字符设备：
+
+```text
+ADC / FPGA FIFO
+      ↓ DMA
+RAM 环形缓冲
+      ↓
+IIO Buffer
+      ↓ read / poll / mmap（取决于实现）
+Application
+```
+
+若每个样本占 $B_s$ 字节、采样率为 $f_s$、通道数为 $N_c$，则未经协议封装的最低数据率为
+
+$$
+R_{data}=f_sN_cB_s.
+$$
+
+缓冲只能吸收短时抖动，不能解决长期处理能力不足。若平均消费速率低于数据产生速率，写指针最终会追上读指针并产生 overrun。驱动应导出溢出计数、序号跳变和缓冲水位。
+
+## 3.4.6 Trigger、时间戳与硬件同步边界
+
+IIO trigger 能把数据采集与设备数据就绪、GPIO、定时器或其他事件关联，buffer 也可以携带时间戳。但“存在 IIO 时间戳”不等于“时间戳对应 ADC 的真实采样保持时刻”。
+
+对于同步量测，确定性链路应在采样时钟域建立：
+
+```text
+GNSS 1 PPS + 参考时钟
+        ↓
+FPGA / Timing Logic
+   ├─ ADC sample clock / CONVST
+   └─ sample counter / PPS capture
+        ↓
+样本值 + 硬件计数关系
+        ↓ FIFO / DMA / IIO Buffer
+        ↓
+用户程序换算时间
+```
+
+如果驱动在中断到达后调用软件时钟，时间戳包含中断、调度和总线延迟；如果时间戳来自 FPGA 或 ADC 同域计数器，它才可能表示真实采样事件。文档和数据格式应明确时间戳来源、时钟域、捕获事件和不确定度。
+
+完整的 GNSS、PPS、采样计数器与误差预算见[IIO 硬件同步采样与时间戳](./iio-hardware-sync)。
+
+## 3.4.7 参考资料
+
+- [Linux 内核：Serial Peripheral Interface](https://docs.kernel.org/driver-api/spi.html)
+- [Linux 内核：Industrial I/O](https://docs.kernel.org/driver-api/iio/index.html)
+- [Linux 内核：IIO Core](https://docs.kernel.org/driver-api/iio/core.html)
+- [Linux 内核：IIO Buffers](https://docs.kernel.org/iio/iio_devbuf.html)
+- [Linux 内核：IIO Triggers](https://docs.kernel.org/driver-api/iio/triggers.html)

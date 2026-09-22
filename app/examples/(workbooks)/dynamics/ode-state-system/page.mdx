@@ -1,0 +1,63 @@
+# 从二阶方程到耦合微分方程组
+
+仍取例 3，定义状态 $x_1=x$，$x_2=\dot x$。于是
+
+$$
+\begin{cases}
+\dot x_1=x_2,\\
+\dot x_2=-5x_1-2x_2,
+\end{cases}
+\qquad
+\boldsymbol{x}(0)=\begin{bmatrix}1\\0\end{bmatrix}.
+$$
+
+写成矩阵形式：
+
+$$
+\dot{\boldsymbol{x}}=A\boldsymbol{x},\qquad
+A=\begin{bmatrix}0&1\\-5&-2\end{bmatrix}.
+$$
+
+这不是新的物理模型，而是同一个模型的另一种表示。由例 3 的结果，直接得到
+
+$$
+\boxed{
+\boldsymbol{x}(t)=
+\begin{bmatrix}
+e^{-t}(\cos2t+\tfrac12\sin2t)\\
+-\tfrac52e^{-t}\sin2t
+\end{bmatrix}}.
+$$
+
+第一行求导等于第二行；第二行求导也满足 $\dot x_2=-5x_1-2x_2$。两个状态都包含同一对模态，但幅值与相位不同。
+
+### 为什么下一章要学习特征值
+
+尝试向量形式的解 $\boldsymbol{x}=\boldsymbol{v}e^{\lambda t}$，其中 $\boldsymbol{v}\ne0$，代入得到
+
+$$
+A\boldsymbol{v}=\lambda\boldsymbol{v}.
+$$
+
+这正是特征值和特征向量的定义。非零解存在的条件为
+
+$$
+\det(\lambda I-A)=\lambda^2+2\lambda+5=0.
+$$
+
+二阶方程的特征根与状态矩阵的特征值完全一致。一般的常系数线性系统
+
+$$
+\dot{\boldsymbol{x}}=A\boldsymbol{x}+B\boldsymbol{u}
+$$
+
+具有解的表达式
+
+$$
+\boldsymbol{x}(t)=e^{At}\boldsymbol{x}(0)
++\int_0^t e^{A(t-\tau)}B\boldsymbol{u}(\tau)\,\mathrm d\tau.
+$$
+
+这里的矩阵指数 $e^{At}$ 是标量指数解向方程组的推广，其计算与解耦方法留到第二章。
+
+**另一种求解路线：** [在拉普拉斯域联立求解状态方程](/examples/dynamics/laplace/state-system)。

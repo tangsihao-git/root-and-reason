@@ -1,0 +1,47 @@
+# 联立求解耦合微分方程组
+
+求解第一章例 5 的状态方程：
+
+$$
+\dot x_1=x_2,\qquad \dot x_2=-5x_1-2x_2,
+\qquad x_1(0^-)=1,\quad x_2(0^-)=0.
+$$
+
+**第一步：对每个方程变换。**
+
+$$
+sX_1-1=X_2,\qquad sX_2=-5X_1-2X_2.
+$$
+
+**第二步：消元。** 把 $X_2=sX_1-1$ 代入第二式：
+
+$$
+(s+2)(sX_1-1)=-5X_1.
+$$
+
+于是
+
+$$
+X_1=\frac{s+2}{s^2+2s+5},\qquad
+X_2=sX_1-1=\frac{-5}{s^2+2s+5}.
+$$
+
+**第三步：分别逆变换。**
+
+$$
+\boxed{x_1(t)=e^{-t}(\cos2t+\tfrac12\sin2t),\qquad
+x_2(t)=-\tfrac52e^{-t}\sin2t}.
+$$
+
+对于更大的方程组，同样的步骤可以写成
+
+$$
+(sI-A)\boldsymbol X(s)=\boldsymbol x(0^-)+B\boldsymbol U(s),
+$$
+
+$$
+\boldsymbol X(s)=(sI-A)^{-1}\boldsymbol x(0^-)
++(sI-A)^{-1}B\boldsymbol U(s).
+$$
+
+该表达式在 $sI-A$ 可逆处成立，矩阵逆及其与特征值的联系将在后续解释。

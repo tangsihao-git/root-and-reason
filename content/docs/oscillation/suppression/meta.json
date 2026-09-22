@@ -1,0 +1,10 @@
+{
+  "title": "4. 振荡抑制",
+  "pages": [
+    "control-foundations",
+    "compensators",
+    "feedforward",
+    "damping",
+    "source-to-control"
+  ]
+}

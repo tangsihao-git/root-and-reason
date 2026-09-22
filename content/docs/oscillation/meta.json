@@ -1,0 +1,11 @@
+{
+  "title": "数据分析",
+  "pages": [
+    "methods",
+    "mechanisms",
+    "source-tracing",
+    "suppression",
+    "appendix"
+  ],
+  "icon": "oscillation"
+}

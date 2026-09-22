@@ -1,0 +1,10 @@
+{
+  "title": "量测硬件",
+  "pages": [
+    "sensors-transducers",
+    "acquisition-chain",
+    "hardware",
+    "operating-systems"
+  ],
+  "icon": "embedded"
+}

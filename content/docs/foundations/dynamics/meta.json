@@ -1,0 +1,9 @@
+{
+  "title": "1. 数学与动态系统",
+  "pages": [
+    "ode",
+    "linear-algebra",
+    "laplace",
+    "state-space-modal"
+  ]
+}

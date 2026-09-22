@@ -1,0 +1,30 @@
+# 线性代数：两个实模态
+
+求解
+
+$$
+\dot{\boldsymbol x}=
+\begin{bmatrix}-1&1\\0&-3\end{bmatrix}\boldsymbol x,
+\qquad
+\boldsymbol x(0)=\begin{bmatrix}0\\2\end{bmatrix}.
+$$
+
+特征值为 $-1$ 和 $-3$。可取
+
+$$
+\boldsymbol v_1=\begin{bmatrix}1\\0\end{bmatrix},
+\qquad
+\boldsymbol v_2=\begin{bmatrix}-\tfrac12\\1\end{bmatrix},
+\qquad
+V=\begin{bmatrix}1&-\tfrac12\\0&1\end{bmatrix}.
+$$
+
+由 $\boldsymbol z(0)=V^{-1}\boldsymbol x(0)=[1\ 2]^\mathsf T$，得
+
+$$
+\boldsymbol x(t)=
+\boldsymbol v_1e^{-t}+2\boldsymbol v_2e^{-3t}
+=\begin{bmatrix}e^{-t}-e^{-3t}\\2e^{-3t}\end{bmatrix}.
+$$
+
+第二个状态只含快模态 $e^{-3t}$，第一个状态同时含快、慢模态。长时间响应由距虚轴更近的 $-1$ 模态主导。

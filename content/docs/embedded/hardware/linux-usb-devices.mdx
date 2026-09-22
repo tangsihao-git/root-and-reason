@@ -1,0 +1,127 @@
+---
+title: "3.6 Linux USB 设备发现与驱动链"
+description: "从主控制器、枚举、描述符、接口、端点和驱动绑定理解 USB 设备如何进入 Linux 用户空间。"
+---
+
+USB 与板载 SPI 设备的主要差异是设备发现方式。SPI 系统通常预先描述芯片及片选关系；USB 协议定义了连接检测、枚举和描述符读取，设备接入后能够报告自身身份、接口与传输端点。
+
+## 3.6.1 主机侧硬件层级
+
+```text
+CPU 与内核
+   ↓
+USB Host Controller Driver
+   ↓
+USB Host Controller
+   ↓
+USB PHY / Link
+   ↓
+USB 线缆、Hub 与 Device
+```
+
+CPU 不逐位生成 USB 波形。设备驱动向 USB Core 提交传输请求，主控制器驱动把请求交给硬件调度，Host Controller 与 PHY 完成帧、包、握手、重试和电气传输。
+
+## 3.6.2 设备插入与枚举
+
+设备接入后，主机侧大致经历：
+
+```text
+检测端口连接状态变化
+        ↓
+端口复位并确认速度
+        ↓
+读取缺省地址上的初始描述信息
+        ↓
+分配唯一 USB 地址
+        ↓
+读取 Device / Configuration / Interface / Endpoint 描述符
+        ↓
+选择配置并建立接口对象
+        ↓
+按 VID/PID 或 Class 等信息匹配驱动
+```
+
+USB 地址由主机在枚举期间分配，与设备描述符中的 VID/PID 不是同一概念。前者标识当前总线上的一次连接，后者描述设备产品身份。
+
+## 3.6.3 描述符的层级
+
+| 描述符 | 表达的内容 |
+| --- | --- |
+| Device | USB 版本、VID、PID、设备类别及配置数量 |
+| Configuration | 一种供电与功能组合，包含若干 Interface |
+| Interface | 一个可由驱动绑定的功能，如音频流或数据采集 |
+| Alternate Setting | 同一接口的不同端点或带宽配置 |
+| Endpoint | 传输方向、类型、最大包长和轮询间隔 |
+
+复合设备可能包含多个接口，并由不同驱动分别绑定。Linux 驱动匹配经常发生在接口层，因此“一个物理 USB 设备”不一定只对应一个软件驱动或一个用户接口。
+
+## 3.6.4 Endpoint 与传输请求
+
+Endpoint 是设备内部面向主机的逻辑传输终点，具有方向和传输类型。一个 USB ADC 可以使用 OUT 端点接收配置命令，使用 IN 端点上传采样数据：
+
+```text
+控制或配置：Host → OUT Endpoint → USB ADC
+采样数据：  Host ← IN Endpoint  ← USB ADC
+```
+
+控制、批量、中断和等时传输提供不同的可靠性、时延和带宽保证。内核设备驱动通常构造 URB（USB Request Block），指定目标端点、缓冲区和完成回调，再交给 USB Core；驱动不需要自行控制线上每一个 bit。
+
+连续采样设计还需处理多个并行 URB、完成回调重提交、短包、超时、拔出和带宽预算。USB 的“中断传输”是主机周期轮询的一种传输类型，不等同于设备直接打断 CPU 的传统硬件中断线。
+
+## 3.6.5 驱动绑定与 `probe()`
+
+USB Core 根据驱动的设备 ID 表与接口描述信息进行匹配，成功后调用 `probe()`。驱动在其中验证端点、分配缓冲、建立同步或异步传输，并向相应 Linux 子系统注册功能。
+
+```text
+USB Device / Interface
+        ↓ descriptors
+USB Core
+        ↓ match
+USB Device Driver → probe()
+        ↓
+TTY / V4L2 / ALSA / Network / IIO / 自定义字符设备
+```
+
+USB 只规定设备如何连接、枚举和传输；最终用户接口由设备功能决定。例如串口常表现为 `/dev/ttyUSB*`，摄像头进入 V4L2，声卡进入 ALSA，网卡进入网络子系统，测量设备也可以注册到 IIO 或采用专用字符设备。
+
+## 3.6.6 文件描述符与热插拔生命周期
+
+应用打开用户接口后得到 `fd`，后续 `read()`、`write()`、`ioctl()` 或内存映射沿已经建立的对象关系进入子系统和驱动，不会每次重新枚举 USB：
+
+```text
+插入：Enumeration → Driver probe → 注册用户接口
+
+运行：open → fd → subsystem / driver
+              → USB Core → Host Controller → Device
+```
+
+设备可随时拔出，因此驱动的 `disconnect()`、正在飞行的 URB 取消、缓冲区引用计数和用户进程错误返回同样重要。拔出后已有 `fd` 可能暂时仍存在，但对应硬件已不可用；驱动必须阻止新的 I/O 并安全结束未完成请求。
+
+## 3.6.7 SPI 与 USB 的统一比较
+
+| 问题 | SPI | USB |
+| --- | --- | --- |
+| 设备发现 | 设备树、ACPI 或板级描述为主 | 插入后动态枚举 |
+| 身份来源 | `compatible` 等固件描述 | Descriptor 中的 VID/PID/Class/Interface |
+| 热插拔 | 通常不是主要目标 | 协议与驱动模型原生支持 |
+| 总线核心 | SPI Core | USB Core |
+| 控制器层 | SPI Controller Driver | Host Controller Driver |
+| 物理传输 | CS/SCLK/MOSI/MISO | USB PHY、Hub 与协议链路 |
+| 常见上层接口 | IIO、MTD、输入或专用接口 | TTY、V4L2、ALSA、网络、IIO 或专用接口 |
+
+## 3.6.8 统一的 Linux 设备模型
+
+三条底层链路可以归纳为五层：
+
+1. **硬件层**：CPU、片内互连、总线控制器和外部设备；
+2. **发现层**：设备树等静态描述，或 USB 等动态枚举；
+3. **总线与具体驱动层**：总线负责传输，具体驱动理解芯片；
+4. **子系统层**：IIO、TTY、V4L2、ALSA、Network 等统一同类设备；
+5. **用户层**：通过文件、属性、buffer、事件和系统调用使用设备。
+
+总线决定设备如何被发现和通信，具体驱动决定硬件功能如何实现，Linux 子系统决定同类设备如何一致地呈现给用户空间。
+
+## 3.6.9 参考资料
+
+- [Linux 内核：USB Host-Side API](https://docs.kernel.org/driver-api/usb/usb.html)
+- [Linux 内核：设备与驱动绑定模型](https://cdn.kernel.org/doc/html/latest/driver-api/driver-model/binding.html)
