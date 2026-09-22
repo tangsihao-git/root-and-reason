@@ -335,8 +335,8 @@ body{color:#283a4d}
 .site-header>nav.site-menu{position:absolute;left:12px;top:68px;height:auto;display:flex;flex-direction:column;gap:0;width:200px;padding:8px;background:var(--paper);border:1px solid var(--rule);z-index:40;margin:0}
 .site-header>nav.site-menu a{padding:12px;font-size:14px;font-weight:600}
 .site-header>nav.site-menu a[aria-current]:after{content:none}
-.docs-layout{max-width:1440px;grid-template-columns:272px minmax(0,1fr)}
-.doc-columns{grid-template-columns:minmax(0,848px) 224px;padding:36px 32px 40px;gap:32px}
+.docs-layout{width:calc(100% - 2 * var(--page-edge));max-width:none;grid-template-columns:272px minmax(0,1fr)}
+.doc-columns{grid-template-columns:minmax(0,1fr) 224px;padding:36px 0 40px 32px;gap:32px}
 .doc-page{max-width:848px}
 .doc-outline{width:224px}
 .sidebar-resize{display:none}
@@ -455,3 +455,16 @@ body{color:#283a4d}
  .doc-outline{right:18px}
 }
 @keyframes chapter-drawer-in{from{transform:translateX(-24px);opacity:0}to{transform:none;opacity:1}}
+
+/* Keep document navigation on the same edges as the site header. */
+@media(min-width:1201px){
+ .docs-sidebar .sidebar-content{padding-left:0}
+}
+@media(max-width:1200px){
+ .docs-local-bar{left:var(--page-edge);right:var(--page-edge)}
+ .mobile-chapters{left:var(--page-edge);padding-inline:0}
+ .doc-outline{right:var(--page-edge)}
+ .doc-outline .outline-trigger{padding-inline:0}
+ .doc-outline #page-outline{left:var(--page-edge);right:var(--page-edge)}
+ .doc-columns{padding-inline:0}
+}
