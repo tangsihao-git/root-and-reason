@@ -42,14 +42,14 @@ export function BlogIndex({ posts, basePath = '' }: { posts: BlogPost[]; basePat
     </section>    <section aria-label="博客条目" className={styles.list}>
       {visible.map(post => <article className={styles.entry} key={post.slug}>
         <div className={styles.body}>
-          <h2><Link href={`/blog/${post.slug}`}>{post.listTitle}</Link></h2>
+          <h2><Link prefetch={false} href={`/blog/${post.slug}`}>{post.listTitle}</Link></h2>
           <p className={styles.summary}>{post.subtitle}</p>
           <div className={styles.entryFooter}><time dateTime={post.publishedAt}>{post.publishedLabel}</time><div className={styles.actions}>
             <Button variant="ghost" size="icon-sm" aria-label={`${reactions[post.slug]?.liked ? '取消点赞' : '点赞'}：${post.listTitle}`} aria-pressed={!!reactions[post.slug]?.liked} onClick={() => react(post.slug, 'liked')}><ThumbsUp size={14}/></Button>
             <Button variant="ghost" size="icon-sm" aria-label={`${reactions[post.slug]?.favorited ? '取消收藏' : '收藏'}：${post.listTitle}`} aria-pressed={!!reactions[post.slug]?.favorited} onClick={() => react(post.slug, 'favorited')}><Bookmark size={14}/></Button>
           </div></div>
         </div>
-        <Link className={styles.cover} href={`/blog/${post.slug}`} tabIndex={-1} aria-label={`阅读：${post.listTitle}`}><img src={`${basePath}${post.cover}`} alt={post.coverAlt} width={620} height={350} loading="lazy" /></Link>
+        <Link prefetch={false} className={styles.cover} href={`/blog/${post.slug}`} tabIndex={-1} aria-label={`阅读：${post.listTitle}`}><img src={`${basePath}${post.cover}`} alt={post.coverAlt} width={620} height={350} loading="lazy" /></Link>
       </article>)}
       {!visible.length && <p className={styles.empty}>暂无文章</p>}
     </section>

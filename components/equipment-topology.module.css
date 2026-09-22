@@ -55,21 +55,21 @@
 .label {
   fill: var(--color-fd-foreground);
   font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
-  font-size: 15px;
+  font-size: 17px;
   text-anchor: middle;
 }
 
 .small {
   fill: var(--color-fd-muted-foreground);
   font-family: 'Times New Roman', 'Microsoft YaHei', '微软雅黑', sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   text-anchor: middle;
 }
 
 .section {
   fill: var(--color-fd-primary);
   font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.08em;
 }

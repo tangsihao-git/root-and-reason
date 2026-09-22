@@ -18,10 +18,10 @@ export function SiteHeader(){
  },[open]);
  const active=(href:string)=>href==='/'?path==='/':path.startsWith('/'+href.split('/')[1]);
  return <header ref={root} className="site-header">
- <Link className="wordmark" href="/" aria-label="技术研究文库首页"><BookOpen size={21} strokeWidth={1.3}/><span>技术研究文库</span></Link>
+ <Link prefetch={false} className="wordmark" href="/" aria-label="技术研究文库首页"><BookOpen size={21} strokeWidth={1.3}/><span>技术研究文库</span></Link>
  <button ref={trigger} className="site-menu-trigger" aria-label="站点导航" aria-expanded={open} aria-controls="site-menu" onClick={()=>setOpen(!open)}>{open?<X size={21}/>:<Menu size={21}/>}</button>
- <HighlightNav label="主导航" variant="underline">{links.slice(1).map(([name,href])=><Link key={href} href={href} aria-current={active(href)?'page':undefined}>{name}</Link>)}</HighlightNav>
+ <HighlightNav label="主导航" variant="underline">{links.slice(1).map(([name,href])=><Link prefetch={false} key={href} href={href} aria-current={active(href)?'page':undefined}>{name}</Link>)}</HighlightNav>
  <Search/>
- {open&&<nav id="site-menu" className="site-menu" aria-label="站点跳转">{links.map(([name,href])=><Link key={href} href={href} aria-current={active(href)?'page':undefined} onClick={()=>setOpen(false)}><span>{name}</span>{active(href)?<span className="site-menu-current" aria-label="当前栏目"/>:<ArrowUpRight size={15} strokeWidth={1.4}/>}</Link>)}</nav>}
+ {open&&<nav id="site-menu" className="site-menu" aria-label="站点跳转">{links.map(([name,href])=><Link prefetch={false} key={href} href={href} aria-current={active(href)?'page':undefined} onClick={()=>setOpen(false)}><span>{name}</span>{active(href)?<span className="site-menu-current" aria-label="当前栏目"/>:<ArrowUpRight size={15} strokeWidth={1.4}/>}</Link>)}</nav>}
  </header>;
 }

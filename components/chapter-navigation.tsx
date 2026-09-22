@@ -15,7 +15,7 @@ function Branch({node,path,depth=0}:{node:Node;path:string;depth?:number}){
  const contains=path.startsWith('/docs/'+node.id+'/');
  const [open,setOpen]=useState(contains);
  useEffect(()=>{if(contains)setOpen(true)},[contains]);
- if(node.href)return <Link href={node.href} title={node.title} className="chapter-link" aria-current={clean(path)===clean(node.href)?'page':undefined} onClick={e=>{if(clean(path)===clean(node.href!))e.preventDefault()}}>{node.title}</Link>;
+ if(node.href)return <Link prefetch={false} href={node.href} title={node.title} className="chapter-link" aria-current={clean(path)===clean(node.href)?'page':undefined} onClick={e=>{if(clean(path)===clean(node.href!))e.preventDefault()}}>{node.title}</Link>;
  return <Collapsible.Root open={open} onOpenChange={setOpen} className={depth===0?'chapter-group':'chapter-subgroup'}>
  <Collapsible.Trigger className="chapter-toggle" title={node.title}><span>{node.title}</span><ChevronRight size={13} className={open?'chevron open':'chevron'}/></Collapsible.Trigger>
  <Collapsible.Panel className="chapter-panel"><div className="chapter-children">{node.children?.map(n=><Branch key={n.id} node={n} path={path} depth={depth+1}/>)}</div></Collapsible.Panel>

@@ -14,7 +14,7 @@ export default async function Page({params}:Props) {
  return <div className="doc-columns"><main id="main" className="doc-page" data-pagefind-body>
  <header className="doc-heading"><h1 data-pagefind-meta="title">{page.title}</h1></header>
  <article className="prose doc-body"><Content components={getMDXComponents()}/></article>
- <nav className="doc-pagination" aria-label="相邻章节" data-pagefind-ignore>{previous?<Link href={previous.href}><ArrowLeft size={16}/>上一节</Link>:<span/>}{next&&<Link href={next.href}>下一节<ArrowRight size={16}/></Link>}</nav>
+ <nav className="doc-pagination" aria-label="相邻章节" data-pagefind-ignore>{previous?<Link prefetch={false} href={previous.href}><ArrowLeft size={16}/>上一节</Link>:<span/>}{next&&<Link prefetch={false} href={next.href}>下一节<ArrowRight size={16}/></Link>}</nav>
  
  </main><Outline key={page.slug}/></div>;
 }
